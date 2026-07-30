@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+runtime_dir="${XDG_RUNTIME_DIR:-/tmp}"
+state_file="$runtime_dir/aarav-gamemode"
+previous_file="$runtime_dir/aarav-gamemode-previous"
+
+status() {
+    if [[ -e "$state_file" ]]; then
+        echo true
+    else
+        echo false
+    fi
+}
+
+enable_mode() {
+    [[ -e "$state_file" ]] && exit 0
+
+    if systemctl --user is-active --quiet hypridle.service; then
+        idle_was_active=true
+    else
+        idle_was_active=false
+    fi
+
+    printf 'hypridle=%s\n' "$idle_was_active" > "$previous_file"
+
+    touch "$state_file"
+
+    # Prevent notification popups without changing the user's DND state.
+    swaync-client --inhibitor-add "gaming-mode" \
+        >/dev/null 2>&1 || true
+
+    systemctl --user stop hypridle.service
+
+    # The Hyprland config checks the state file during reload.
+    hyprctl reload >/dev/null
+
+    # The wrapper will select the compact Gaming Mode bar.
+    systemctl --user restart waybar.service
+
+    hyprctl notify \
+        0 \
+        2500 \
+        "rgb(ffb598)" \
+        "Gaming Mode enabled"
+}
+
+disable_mode() {
+    [[ -e "$state_file" ]] || exit 0
+
+    idle_was_active=false
+
+    if [[ -r "$previous_file" ]]; then
+        # shellcheck disable=SC1090
+        source "$previous_file"
+    fi
+
+    swaync-client --inhibitor-remove "gaming-mode" \
+        >/dev/null 2>&1 || true
+
+    if [[ "${hypridle:-false}" == "true" ]]; then
+        systemctl --user start hypridle.service
+    else
+        systemctl --user stop hypridle.service
+    fi
+
+    rm -f "$state_file" "$previous_file"
+
+    # Reload the full handwritten configuration.
+    hyprctl reload >/dev/null
+
+    systemctl --user restart waybar.service
+
+    hyprctl notify \
+        0 \
+        2500 \
+        "rgb(8fd4c3)" \
+        "Gaming Mode disabled"
+}
+
+case "${1:-toggle}" in
+    status)
+        status
+        ;;
+
+    on)
+        enable_mode
+        ;;
+
+    off)
+        disable_mode
+        ;;
+
+    set)
+        case "${2:-false}" in
+            true)  enable_mode ;;
+            false) disable_mode ;;
+            *)
+                echo "Expected true or false." >&2
+                exit 2
+                ;;
+        esac
+        ;;
+
+    toggle)
+        if [[ -e "$state_file" ]]; then
+            disable_mode
+        else
+            enable_mode
+        fi
+        ;;
+
+    *)
+        echo "Usage: gaming-mode {status|on|off|toggle|set true|set false}" >&2
+        exit 2
+        ;;
+esac

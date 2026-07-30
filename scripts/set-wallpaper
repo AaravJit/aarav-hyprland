@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+declare -a roots=()
+
+for directory in \
+    "__WALLPAPER_DIR__" \
+    "$HOME/Pictures" \
+    "$HOME/Downloads"
+do
+    [[ -d "$directory" ]] && roots+=("$directory")
+done
+
+if (( ${#roots[@]} == 0 )); then
+    notify-send \
+        "Wallpaper picker" \
+        "No wallpaper directories were found."
+    exit 1
+fi
+
+selection="$(
+    find "${roots[@]}" \
+        -type f \
+        \( \
+            -iname '*.png'  -o \
+            -iname '*.jpg'  -o \
+            -iname '*.jpeg' -o \
+            -iname '*.webp' \
+        \) \
+        -print 2>/dev/null |
+        sort |
+        fuzzel \
+            --dmenu \
+            --prompt='Wallpaper > '
+)" || exit 0
+
+[[ -f "$selection" ]] || exit 0
+
+notify-send \
+    "Generating desktop theme" \
+    "Extracting colors from $(basename "$selection")"
+
+if ! matugen image "$selection" \
+    --mode dark \
+    --type scheme-expressive \
+    --source-color-index 0
+then
+    notify-send \
+        -u critical \
+        "Theme generation failed" \
+        "The existing wallpaper and theme were kept."
+    exit 1
+fi
+
+extension="${selection##*.}"
+extension="${extension,,}"
+
+rm -f "$HOME"/.config/hypr/wallpaper-current.*
+
+wallpaper="$HOME/.config/hypr/wallpaper-current.$extension"
+ln -s "$selection" "$wallpaper"
+
+cat > "$HOME/.config/hypr/hyprpaper.conf" <<CONFIG
+splash = false
+ipc = true
+
+wallpaper {
+    monitor = __MONITOR__
+    path = $wallpaper
+    fit_mode = cover
+}
+CONFIG
+
+systemctl --user restart hyprpaper.service
+
+notify-send \
+    "Desktop theme applied" \
+    "$(basename "$selection")"

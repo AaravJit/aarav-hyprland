@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+choice="$(
+    printf '%s\n' \
+        '  Lock' \
+        '󰒲  Suspend' \
+        '󰍃  Log out' \
+        '󰜉  Restart' \
+        '󰐥  Shut down' |
+        fuzzel \
+            --dmenu \
+            --prompt='Power > '
+)" || exit 0
+
+confirm() {
+    local action="$1"
+
+    answer="$(
+        printf '%s\n' \
+            "Yes — $action" \
+            "Cancel" |
+            fuzzel \
+                --dmenu \
+                --lines=2 \
+                --prompt='Confirm > '
+    )" || return 1
+
+    [[ "$answer" == "Yes — $action" ]]
+}
+
+case "$choice" in
+    '  Lock')
+        exec "$HOME/.local/bin/lock-screen"
+        ;;
+
+    '󰒲  Suspend')
+        confirm "Suspend" && systemctl suspend
+        ;;
+
+    '󰍃  Log out')
+        confirm "Log out" && hyprshutdown
+        ;;
+
+    '󰜉  Restart')
+        confirm "Restart" && systemctl reboot
+        ;;
+
+    '󰐥  Shut down')
+        confirm "Shut down" && systemctl poweroff
+        ;;
+
+    *)
+        exit 0
+        ;;
+esac

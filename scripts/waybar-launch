@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+state_file="${XDG_RUNTIME_DIR:-/tmp}/aarav-gamemode"
+
+if [[ -e "$state_file" ]]; then
+    config="$HOME/.config/waybar/config-gaming.jsonc"
+else
+    config="$HOME/.config/waybar/config.jsonc"
+fi
+
+exec /usr/bin/waybar \
+    -c "$config" \
+    -s "$HOME/.config/waybar/style.css"

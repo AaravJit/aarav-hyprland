@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+quiet=false
+
+if [[ "${1:-}" == "--quiet" ]]; then
+    quiet=true
+fi
+
+backup_root="$HOME/.local/state/hyprland-backups"
+stamp="$(date +%F-%H%M%S)"
+archive="$backup_root/hyprland-$stamp.tar.gz"
+
+mkdir -p "$backup_root"
+
+stage="$(mktemp -d)"
+trap 'rm -rf "$stage"' EXIT
+
+mkdir -p "$stage/.snapshot-meta"
+
+managed_paths=(
+    ".config/hypr"
+    ".config/waybar"
+    ".config/swaync"
+    ".config/swayosd"
+    ".config/fuzzel"
+    ".config/kitty"
+    ".config/matugen"
+    ".config/quickshell/overview"
+    ".config/systemd/user"
+    ".config/gtk-3.0"
+    ".config/gtk-4.0"
+    ".config/qt5ct"
+    ".config/qt6ct"
+    ".config/Kvantum"
+    ".local/bin"
+)
+
+existing_paths=()
+
+for relative_path in "${managed_paths[@]}"; do
+    source_path="$HOME/$relative_path"
+
+    if [[ ! -e "$source_path" && ! -L "$source_path" ]]; then
+        continue
+    fi
+
+    existing_paths+=("$relative_path")
+
+    mkdir -p "$stage/$(dirname "$relative_path")"
+    cp -a "$source_path" "$stage/$relative_path"
+done
+
+printf '%s\n' "${existing_paths[@]}" \
+    > "$stage/.snapshot-meta/paths.txt"
+
+pacman -Qqe \
+    > "$stage/.snapshot-meta/packages-explicit.txt"
+
+pacman -Qqm \
+    > "$stage/.snapshot-meta/packages-foreign.txt" \
+    2>/dev/null || true
+
+{
+    echo "Snapshot created: $(date --iso-8601=seconds)"
+    echo
+
+    echo "=== HYPRLAND ==="
+    hyprctl version 2>&1 || true
+
+    echo
+    echo "=== QUICKSHELL ==="
+    qs --version 2>&1 || true
+
+    echo
+    echo "=== HYPRLOCK ==="
+    hyprlock --version 2>&1 || true
+
+    echo
+    echo "=== HYPRIDLE ==="
+    hypridle --version 2>&1 || true
+
+    echo
+    echo "=== SWAYNC ==="
+    swaync --version 2>&1 || true
+
+    echo
+    echo "=== SWAYOSD ==="
+    swayosd-client --version 2>&1 || true
+
+    echo
+    echo "=== KERNEL ==="
+    uname -a
+} > "$stage/.snapshot-meta/versions.txt"
+
+tar \
+    -C "$stage" \
+    -czf "$archive" \
+    .
+
+(
+    cd "$backup_root"
+
+    sha256sum "$(basename "$archive")" \
+        > "$(basename "$archive").sha256"
+)
+
+# Keep the newest 20 compressed snapshots.
+mapfile -t expired < <(
+    find "$backup_root" \
+        -maxdepth 1 \
+        -type f \
+        -name 'hyprland-*.tar.gz' \
+        -printf '%T@ %p\n' |
+        sort -rn |
+        awk 'NR > 20 {
+            $1 = ""
+            sub(/^ /, "")
+            print
+        }'
+)
+
+for old_archive in "${expired[@]}"; do
+    rm -f \
+        "$old_archive" \
+        "$old_archive.sha256"
+done
+
+if [[ "$quiet" == false ]]; then
+    echo "Snapshot created:"
+    echo "$archive"
+fi

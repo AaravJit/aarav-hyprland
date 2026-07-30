@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -u
+
+app="${1:-}"
+
+run_native() {
+    local command_name
+
+    for command_name in "$@"; do
+        if command -v "$command_name" >/dev/null 2>&1; then
+            exec "$command_name"
+        fi
+    done
+
+    return 1
+}
+
+run_flatpak() {
+    local app_id="$1"
+
+    if command -v flatpak >/dev/null 2>&1 &&
+       flatpak info "$app_id" >/dev/null 2>&1; then
+        exec flatpak run "$app_id"
+    fi
+
+    return 1
+}
+
+missing() {
+    notify-send \
+        "Application not found" \
+        "Could not find an installed version of $1."
+    exit 127
+}
+
+case "$app" in
+    zen)
+        run_native zen-browser zen-browser-bin zen ||
+        run_flatpak app.zen_browser.zen ||
+        missing "Zen Browser"
+        ;;
+
+    spotify)
+        run_native spotify spotify-launcher ||
+        run_flatpak com.spotify.Client ||
+        missing "Spotify"
+        ;;
+
+    discord)
+        run_native discord vesktop ||
+        run_flatpak com.discordapp.Discord ||
+        missing "Discord"
+        ;;
+
+    steam)
+        run_native steam ||
+        run_flatpak com.valvesoftware.Steam ||
+        missing "Steam"
+        ;;
+
+    heroic)
+        run_native heroic heroic-games-launcher ||
+        run_flatpak com.heroicgameslauncher.hgl ||
+        missing "Heroic Games Launcher"
+        ;;
+
+    *)
+        notify-send "Unknown application" "${app:-No application supplied}"
+        exit 2
+        ;;
+esac

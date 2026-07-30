@@ -1,0 +1,133 @@
+{
+    "$schema": "/etc/xdg/swaync/configSchema.json",
+    "ignore-gtk-theme": true,
+    "positionX": "right",
+    "positionY": "top",
+    "layer": "overlay",
+    "control-center-layer": "overlay",
+    "layer-shell": true,
+    "layer-shell-cover-screen": true,
+    "cssPriority": "user",
+    "control-center-margin-top": 58,
+    "control-center-margin-bottom": 12,
+    "control-center-margin-right": 12,
+    "control-center-margin-left": 12,
+    "notification-2fa-action": true,
+    "notification-inline-replies": false,
+    "notification-body-image-height": 100,
+    "notification-body-image-width": 200,
+    "timeout": 6,
+    "timeout-low": 4,
+    "timeout-critical": 0,
+    "fit-to-screen": true,
+    "relative-timestamps": true,
+    "control-center-width": 430,
+    "control-center-height": 600,
+    "notification-window-width": 420,
+    "keyboard-shortcuts": true,
+    "notification-grouping": true,
+    "image-visibility": "when-available",
+    "transition-time": 160,
+    "hide-on-clear": false,
+    "hide-on-action": true,
+    "text-empty": "No Notifications",
+    "script-fail-notify": true,
+    "scripts": {
+        "example-script": {
+            "app-name": "example.app.id",
+            "exec": "echo 'Do something...'",
+            "urgency": "Normal"
+        },
+        "example-action-script": {
+            "app-name": "example.app.id",
+            "exec": "echo 'Do something actionable!'",
+            "urgency": "Normal",
+            "run-on": "action"
+        }
+    },
+    "notification-visibility": {
+        "example-name": {
+            "state": "muted",
+            "urgency": "Normal",
+            "app-name": "example.app.id"
+        }
+    },
+    "widgets": [
+        "title",
+        "dnd",
+        "mpris",
+        "buttons-grid",
+        "volume",
+        "notifications"
+    ],
+    "widget-config": {
+        "notifications": {
+            "vexpand": true
+        },
+        "inhibitors": {
+            "text": "Inhibitors",
+            "button-text": "Clear All",
+            "clear-all-button": true
+        },
+        "title": {
+            "text": "Notifications",
+            "clear-all-button": true,
+            "button-text": "Clear"
+        },
+        "dnd": {
+            "text": "Do Not Disturb"
+        },
+        "label": {
+            "max-lines": 5,
+            "text": "Label Text"
+        },
+        "mpris": {
+            "image-size": 96,
+            "image-radius": 14
+        },
+        "buttons-grid": {
+            "actions": [
+                {
+                    "label": "\udb82\udd28  Wi-Fi",
+                    "type": "toggle",
+                    "command": "__HOME__/.local/bin/swaync-toggle wifi",
+                    "update-command": "__HOME__/.local/bin/swaync-toggle wifi-status"
+                },
+                {
+                    "label": "\udb81\udd94  Night",
+                    "type": "toggle",
+                    "command": "__HOME__/.local/bin/swaync-toggle night",
+                    "update-command": "__HOME__/.local/bin/swaync-toggle night-status"
+                },
+                {
+                    "label": "\udb81\udcb2  Idle",
+                    "type": "toggle",
+                    "command": "__HOME__/.local/bin/swaync-toggle idle",
+                    "update-command": "__HOME__/.local/bin/swaync-toggle idle-status"
+                },
+                {
+                    "label": "\udb80\udeb4  Gaming",
+                    "type": "toggle",
+                    "command": "__HOME__/.local/bin/swaync-toggle gaming",
+                    "update-command": "__HOME__/.local/bin/swaync-toggle gaming-status"
+                },
+                {
+                    "label": "\udb83\ude09  Wallpaper",
+                    "command": "bash -lc '$HOME/.local/bin/set-wallpaper'"
+                },
+                {
+                    "label": "\udb83\ude51  Screenshot",
+                    "command": "bash -lc '$HOME/.local/bin/screenshot-region-edit'"
+                },
+                {
+                    "label": "\udb81\udc25  Power",
+                    "command": "bash -lc '$HOME/.local/bin/power-menu'"
+                }
+            ]
+        },
+        "volume": {
+            "label": "\uf028",
+            "show-per-app": false
+        }
+    }
+}

@@ -1,0 +1,233 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+issues=0
+
+pass() {
+    printf '[PASS] %s\n' "$1"
+}
+
+fail() {
+    printf '[FAIL] %s\n' "$1"
+    issues=$((issues + 1))
+}
+
+warn() {
+    printf '[WARN] %s\n' "$1"
+}
+
+echo "========================================"
+echo "AARAV HYPRLAND HEALTH CHECK"
+echo "========================================"
+
+echo
+echo "--- Required commands ---"
+
+required_commands=(
+    hyprctl
+    luac
+    systemctl
+    waybar
+    swaync-client
+    swayosd-client
+    matugen
+    qs
+    playerctl
+    wpctl
+    nmcli
+    nvtop
+)
+
+for command_name in "${required_commands[@]}"; do
+    if command -v "$command_name" >/dev/null 2>&1; then
+        pass "$command_name is installed"
+    else
+        fail "$command_name is missing"
+    fi
+done
+
+echo
+echo "--- Lua syntax ---"
+
+lua_count=0
+
+while IFS= read -r -d '' lua_file; do
+    lua_count=$((lua_count + 1))
+
+    if luac -p "$lua_file" 2>/dev/null; then
+        pass "${lua_file/#$HOME\//}"
+    else
+        fail "Lua syntax error: ${lua_file/#$HOME\//}"
+        luac -p "$lua_file" 2>&1 || true
+    fi
+done < <(
+    find "$HOME/.config/hypr" \
+        -type f \
+        -name '*.lua' \
+        -print0
+)
+
+if [[ "$lua_count" -eq 0 ]]; then
+    fail "No Hyprland Lua files found"
+fi
+
+echo
+echo "--- Structured config files ---"
+
+json_files=(
+    "$HOME/.config/swaync/config.json"
+    "$HOME/.config/quickshell/overview/config.json"
+)
+
+for json_file in "${json_files[@]}"; do
+    if [[ ! -f "$json_file" ]]; then
+        fail "Missing ${json_file/#$HOME\//}"
+        continue
+    fi
+
+    if python -m json.tool "$json_file" \
+        >/dev/null 2>&1
+    then
+        pass "${json_file/#$HOME\//} is valid JSON"
+    else
+        fail "${json_file/#$HOME\//} contains invalid JSON"
+    fi
+done
+
+if python - <<'PY' >/dev/null 2>&1
+from pathlib import Path
+import tomllib
+
+path = Path.home() / ".config/matugen/config.toml"
+
+with path.open("rb") as file:
+    tomllib.load(file)
+PY
+then
+    pass ".config/matugen/config.toml is valid TOML"
+else
+    fail ".config/matugen/config.toml is invalid TOML"
+fi
+
+echo
+echo "--- Hyprland runtime ---"
+
+config_errors="$(
+    hyprctl configerrors 2>&1 |
+        sed '/^[[:space:]]*$/d'
+)"
+
+if [[ -z "$config_errors" ]]; then
+    pass "Hyprland reports no configuration errors"
+else
+    fail "Hyprland reports configuration errors"
+    printf '%s\n' "$config_errors"
+fi
+
+echo
+echo "--- Generated colors ---"
+
+generated_files=(
+    "$HOME/.config/waybar/colors.css"
+    "$HOME/.config/hypr/hyprlock-colors.conf"
+    "$HOME/.config/quickshell/overview/common/Appearance.colors.qml"
+)
+
+for generated_file in "${generated_files[@]}"; do
+    if [[ ! -s "$generated_file" ]]; then
+        fail "Missing or empty ${generated_file/#$HOME\//}"
+        continue
+    fi
+
+    if grep -q '{{' "$generated_file"; then
+        fail "Unresolved Matugen syntax in ${generated_file/#$HOME\//}"
+    else
+        pass "${generated_file/#$HOME\//}"
+    fi
+done
+
+echo
+echo "--- Core services ---"
+
+core_services=(
+    waybar.service
+    swaync.service
+    swayosd.service
+    quickshell-overview.service
+    hyprpaper.service
+    hyprsunset.service
+)
+
+for unit in "${core_services[@]}"; do
+    if systemctl --user is-active --quiet "$unit"; then
+        pass "$unit is active"
+    else
+        fail "$unit is not active"
+    fi
+done
+
+gaming_state="$(
+    "$HOME/.local/bin/gaming-mode" status \
+        2>/dev/null || echo false
+)"
+
+if [[ "$gaming_state" == "true" ]]; then
+    if systemctl --user is-active --quiet hypridle.service; then
+        warn "Gaming Mode is on but Hypridle is still active"
+    else
+        pass "Hypridle is correctly stopped for Gaming Mode"
+    fi
+else
+    if systemctl --user is-active --quiet hypridle.service; then
+        pass "Hypridle is active"
+    else
+        fail "Hypridle is inactive outside Gaming Mode"
+    fi
+fi
+
+echo
+echo "--- Wallpaper state ---"
+
+wallpaper_link="$(
+    find "$HOME/.config/hypr" \
+        -maxdepth 1 \
+        -type l \
+        -name 'wallpaper-current.*' \
+        -print -quit
+)"
+
+if [[ -z "$wallpaper_link" ]]; then
+    fail "No wallpaper-current symlink found"
+elif [[ -e "$(readlink -f "$wallpaper_link")" ]]; then
+    pass "Wallpaper symlink resolves correctly"
+else
+    fail "Wallpaper symlink target is missing"
+fi
+
+echo
+echo "--- Failed user units ---"
+
+failed_units="$(
+    systemctl --user --failed \
+        --no-legend \
+        --plain \
+        2>/dev/null || true
+)"
+
+if [[ -z "${failed_units//[[:space:]]/}" ]]; then
+    pass "No failed user services"
+else
+    fail "One or more user services have failed"
+    printf '%s\n' "$failed_units"
+fi
+
+echo
+echo "========================================"
+
+if [[ "$issues" -eq 0 ]]; then
+    echo "RESULT: HEALTHY"
+    exit 0
+else
+    echo "RESULT: $issues ISSUE(S) FOUND"
+    exit 1
+fi

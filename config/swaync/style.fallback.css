@@ -1,0 +1,246 @@
+* {
+    font-family:
+        "Noto Sans",
+        "Symbols Nerd Font Mono",
+        sans-serif;
+
+    font-size: 14px;
+}
+
+.blank-window,
+.floating-notifications {
+    background: transparent;
+}
+
+.control-center {
+    background: #1b2421DB;
+    color: #dbe5df;
+
+    border: 1px solid #4e5f5973;
+    border-radius: 18px;
+
+    padding: 10px;
+
+    box-shadow: 0 10px 32px #0000008C;
+}
+
+.control-center-list,
+.notification-row,
+.notification-background,
+.notification-content {
+    background: transparent;
+}
+
+.control-center-list-placeholder {
+    color: #b8cbc3;
+}
+
+.notification-background {
+    padding: 5px;
+}
+
+.notification {
+    background: #252e2bED;
+
+    border: 1px solid #4e5f5959;
+    border-radius: 15px;
+
+    box-shadow: 0 5px 18px #00000066;
+}
+
+.notification:hover {
+    background: #303936F2;
+}
+
+.notification-content {
+    padding: 10px;
+}
+
+.notification-default-action,
+.notification-action {
+    background: transparent;
+    border: none;
+    border-radius: 14px;
+
+    color: #dbe5df;
+}
+
+.notification-default-action:hover,
+.notification-action:hover {
+    background: #8f48284D;
+}
+
+.summary {
+    color: #dbe5df;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.body {
+    color: #b8cbc3;
+    font-size: 13px;
+}
+
+.time {
+    color: #83958e;
+    font-size: 12px;
+    margin-right: 28px;
+}
+
+.close-button {
+    background: #303936B3;
+    color: #dbe5df;
+
+    border: none;
+    border-radius: 999px;
+
+    min-width: 24px;
+    min-height: 24px;
+
+    box-shadow: none;
+}
+
+.close-button:hover {
+    background: #b61718;
+    color: #ffffff;
+}
+
+.notification.critical {
+    border-color: #ffb4ab;
+}
+
+.widget-title,
+.widget-dnd,
+.widget-mpris,
+.widget-volume {
+    background: #252e2bD1;
+
+    border: 1px solid #4e5f5959;
+    border-radius: 15px;
+
+    color: #dbe5df;
+
+    margin: 5px;
+    padding: 11px;
+}
+
+.widget-title > label {
+    color: #dbe5df;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.widget-title > button {
+    background: #303936A6;
+    color: #b8cbc3;
+
+    border: none;
+    border-radius: 10px;
+
+    padding: 7px 12px;
+}
+
+.widget-title > button:hover {
+    background: #b61718;
+    color: #ffffff;
+}
+
+.widget-dnd > switch {
+    background: #303936;
+    border: none;
+    border-radius: 999px;
+}
+
+.widget-dnd > switch:checked {
+    background: #ffb598;
+}
+
+.widget-dnd > switch slider {
+    background: #501900;
+    border-radius: 999px;
+}
+
+.widget-mpris {
+    padding: 8px;
+}
+
+.widget-mpris-player {
+    background: #151e1bC7;
+    border-radius: 13px;
+    padding: 9px;
+}
+
+.widget-volume trough {
+    background: #303936;
+    border-radius: 999px;
+    min-height: 7px;
+}
+
+.widget-volume highlight {
+    background: #ffb598;
+    border-radius: 999px;
+}
+
+.widget-volume slider {
+    background: #501900;
+    border-radius: 999px;
+
+    min-width: 14px;
+    min-height: 14px;
+}
+
+
+/* Aarav's wallpaper-colored quick settings */
+
+.widget-buttons-grid {
+    background: transparent;
+    margin: 4px;
+}
+
+.widget-buttons-grid > flowbox {
+    background: transparent;
+    padding: 0;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild {
+    background: transparent;
+    padding: 4px;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button {
+    background: #252e2b;
+    color: #dbe5df;
+
+    border: 1px solid #4e5f59;
+    border-radius: 14px;
+
+    min-width: 112px;
+    min-height: 50px;
+
+    padding: 10px 13px;
+
+    font-family:
+        "Noto Sans",
+        "Symbols Nerd Font Mono",
+        sans-serif;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button:hover {
+    background: #303936;
+    border-color: #ffb598;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button.toggle:checked {
+    background: #8f4828;
+    color: #ffffff;
+
+    border-color: #ffb598;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button.toggle:checked:hover {
+    background: #ffb598;
+    color: #501900;
+}

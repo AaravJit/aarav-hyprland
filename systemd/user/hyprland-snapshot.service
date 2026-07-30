@@ -1,0 +1,6 @@
+[Unit]
+Description=Create a Hyprland configuration snapshot
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/hypr-snapshot --quiet

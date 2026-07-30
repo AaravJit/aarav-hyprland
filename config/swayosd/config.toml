@@ -1,0 +1,18 @@
+[server]
+
+style = "__HOME__/.config/swayosd/style.css"
+
+# Position measured downward from the top.
+top_margin = 0.82
+
+# Match the 100% cap used by the previous wpctl bindings.
+max_volume = 100
+
+show_percentage = true
+
+# Milliseconds.
+
+min_brightness = 5
+keyboard_backlight = false
+
+[client]

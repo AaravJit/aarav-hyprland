@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+geometry="$(slurp -d)" || exit 0
+grim -g "$geometry" - | wl-copy
+
+notify-send \
+    "Screenshot copied" \
+    "The selected region is now in your clipboard."

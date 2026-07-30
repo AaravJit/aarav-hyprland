@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+state_file="${XDG_RUNTIME_DIR:-/tmp}/aarav-night-light"
+
+case "${1:-status}" in
+    status)
+        if [[ -e "$state_file" ]]; then
+            echo true
+        else
+            echo false
+        fi
+        ;;
+
+    set)
+        requested="${2:-false}"
+
+        if [[ "$requested" == "true" ]]; then
+            hyprctl hyprsunset temperature 3500 >/dev/null
+            touch "$state_file"
+
+            notify-send \
+                "Night light enabled" \
+                "Display temperature set to 3500 K."
+        else
+            hyprctl hyprsunset identity >/dev/null
+            rm -f "$state_file"
+
+            notify-send \
+                "Night light disabled" \
+                "Display colors returned to normal."
+        fi
+        ;;
+
+    *)
+        echo "Usage: night-light {status|set true|set false}" >&2
+        exit 2
+        ;;
+esac

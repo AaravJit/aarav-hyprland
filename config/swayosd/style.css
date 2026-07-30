@@ -1,0 +1,74 @@
+@import url("../waybar/colors.css");
+
+window#osd {
+    background-color: alpha(@surface_container, 0.88);
+
+    border: 1px solid alpha(@outline_variant, 0.58);
+    border-radius: 20px;
+
+    box-shadow: 0 8px 28px alpha(@shadow, 0.58);
+}
+
+#container {
+    margin: 16px 21px;
+}
+
+image {
+    color: @primary;
+    -gtk-icon-size: 32px;
+}
+
+label {
+    color: @on_surface;
+
+    font-family:
+        "Noto Sans",
+        "Symbols Nerd Font Mono",
+        sans-serif;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+progressbar:disabled,
+image:disabled {
+    opacity: 0.52;
+}
+
+progressbar,
+segmentedprogress {
+    min-height: 9px;
+
+    border: none;
+    border-radius: 999px;
+
+    background-color: transparent;
+}
+
+trough,
+segment {
+    min-height: inherit;
+
+    border: none;
+    border-radius: inherit;
+
+    background-color: alpha(@outline_variant, 0.58);
+}
+
+progress,
+segment.active {
+    min-height: inherit;
+
+    border: none;
+    border-radius: inherit;
+
+    background-color: @primary;
+}
+
+segment {
+    margin-left: 7px;
+}
+
+segment:first-child {
+    margin-left: 0;
+}

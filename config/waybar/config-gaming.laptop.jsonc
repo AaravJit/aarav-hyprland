@@ -1,0 +1,154 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 36,
+
+    "margin-top": 6,
+    "margin-left": 10,
+    "margin-right": 10,
+
+    "spacing": 7,
+
+    "modules-left": [
+        "custom/gaming",
+        "hyprland/workspaces"
+    ],
+
+    "modules-center": [
+        "custom/center-hud"
+    ],
+
+    "modules-right": [
+        "custom/gpu",
+        "battery",
+        "pulseaudio",
+        "custom/notification",
+        "clock"
+    ],
+
+    "custom/gaming": {
+        "format": "󰊴  GAME",
+        "tooltip-format": "Gaming Mode enabled\nClick to return to desktop mode",
+        "on-click": "$HOME/.local/bin/gaming-mode off"
+    },
+
+    "hyprland/workspaces": {
+        "format": "{name}",
+        "sort-by": "number",
+        "show-special": false
+    },
+
+    "custom/center-hud": {
+        "format": "{text}",
+        "return-type": "json",
+
+        "exec": "$HOME/.local/bin/waybar-center-hud",
+        "interval": 1,
+
+        "max-length": 68,
+        "escape": true,
+        "tooltip": true,
+
+        "on-click": "$HOME/.local/bin/waybar-center-hud toggle",
+        "on-click-right": "$HOME/.local/bin/waybar-center-hud next",
+        "on-click-middle": "$HOME/.local/bin/waybar-center-hud previous",
+
+        "exec-on-event": true
+    },
+
+    "custom/gpu": {
+        "format": "{text}",
+        "return-type": "json",
+
+        "exec": "$HOME/.local/bin/gpu-status",
+        "interval": 2,
+
+        "tooltip": true,
+        "hide-empty-text": true,
+
+        "on-click": "uwsm app -- kitty --title 'GPU Monitor' sh -lc 'nvtop'"
+    },
+
+    "pulseaudio": {
+        "format": "{icon}  {volume}%",
+        "format-muted": "󰖁  Muted",
+
+        "format-icons": {
+            "headphone": "󰋋",
+            "headset": "󰋎",
+            "default": [
+                "",
+                "",
+                ""
+            ]
+        },
+
+        "tooltip-format": "{desc}\nVolume: {volume}%",
+
+        "on-click": "uwsm app -- pavucontrol",
+        "on-click-right": "swayosd-client --monitor __MONITOR__ --output-volume mute-toggle",
+
+        "scroll-step": 5
+    },
+
+    "custom/notification": {
+        "tooltip": true,
+        "format": "{icon}",
+
+        "format-icons": {
+            "notification": "󱅫",
+            "none": "󰂜",
+            "dnd-notification": "󰂠",
+            "dnd-none": "󰪓",
+            "inhibited-notification": "󰂛",
+            "inhibited-none": "󰪑",
+            "dnd-inhibited-notification": "󰂛",
+            "dnd-inhibited-none": "󰪑"
+        },
+
+        "return-type": "json",
+        "exec": "swaync-client -swb",
+
+        "on-click": "swaync-client -t -sw",
+        "escape": true
+    },
+
+
+    "backlight": {
+        "format": "󰃠  {percent}%",
+        "tooltip-format": "Display brightness: {percent}%",
+        "on-scroll-up": "brightnessctl set +5%",
+        "on-scroll-down": "brightnessctl set 5%-"
+    },
+
+    "battery": {
+        "states": {
+            "warning": 30,
+            "critical": 15
+        },
+
+        "format": "{icon}  {capacity}%",
+        "format-charging": "󰂄  {capacity}%",
+        "format-plugged": "󰚥  {capacity}%",
+
+        "format-icons": [
+            "󰁺",
+            "󰁻",
+            "󰁼",
+            "󰁽",
+            "󰁾",
+            "󰁿",
+            "󰂀",
+            "󰂁",
+            "󰂂",
+            "󰁹"
+        ],
+
+        "tooltip-format": "{capacity}%\n{timeTo}"
+    },
+
+    "clock": {
+        "format": "  {:%I:%M %p}",
+        "tooltip-format": "{:%A, %B %d, %Y}"
+    }
+}

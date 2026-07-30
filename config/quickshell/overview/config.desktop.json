@@ -1,0 +1,60 @@
+{
+    "appearance": {
+        "colorSource": "matugen"
+    },
+    "overview": {
+        "rows": 1,
+        "columns": 5,
+        "scale": 0.17,
+        "enable": true,
+        "hideEmptyRows": false,
+        "closeOnFocusLoss": true,
+        "useWorkspaceMap": false,
+        "workspaceMap": [
+            0,
+            5
+        ],
+        "orderRightLeft": false,
+        "orderBottomUp": false,
+        "previewsEnabled": true,
+        "previewMode": "event",
+        "includeInactiveMonitorPreviews": false,
+        "previewRecaptureDelayMs": 60,
+        "showSpecialWorkspaces": true,
+        "specialWorkspaces": [],
+        "specialWorkspaceColumns": 5,
+        "emptyWorkspaceWallpaper": "__HOME__/.config/hypr/wallpaper-current.jpg",
+        "specialEmptyWorkspaceWallpaper": "__HOME__/.config/hypr/wallpaper-current.jpg",
+        "workspaceSpacing": 10,
+        "backgroundPadding": 18,
+        "workspaceNumberBaseSize": 250,
+        "effects": {
+            "enableBackdrop": true,
+            "backdropOpacity": 0.3,
+            "enableBlur": true,
+            "panelOpacity": 0.55,
+            "workspaceOpacity": 0.48,
+            "emptyWorkspaceWallpaperOverlayOpacity": 0.11,
+            "windowOverlayOpacity": 0.08,
+            "glassMode": true,
+            "glassTintStrength": 0.55,
+            "glassBorderOpacity": 0.82,
+            "glassShineOpacity": 0.26
+        }
+    },
+    "position": {
+        "topMargin": 90
+    },
+    "windowPreview": {
+        "showIcons": true,
+        "iconToWindowRatio": 0.24,
+        "iconToWindowRatioCompact": 0.42,
+        "xwaylandIndicatorToIconRatio": 0.34,
+        "inactiveMonitorOpacity": 0.45,
+        "cropToFill": false
+    },
+    "hacks": {
+        "arbitraryRaceConditionDelay": 150,
+        "hyprlandEventDebounceMs": 50
+    }
+}

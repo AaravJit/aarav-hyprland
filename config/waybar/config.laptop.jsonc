@@ -1,0 +1,232 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 38,
+
+    "margin-top": 7,
+    "margin-left": 8,
+    "margin-right": 8,
+
+    "spacing": 7,
+
+    "modules-left": [
+        "custom/launcher",
+        "hyprland/workspaces"
+    ],
+
+    "modules-center": [
+        "custom/center-hud"
+    ],
+
+    "modules-right": [
+        "privacy",
+        "custom/gpu",
+        "battery",
+        "backlight",
+        "idle_inhibitor",
+        "custom/notification",
+        "pulseaudio",
+        "network",
+        "clock"
+    ],
+
+    "custom/launcher": {
+        "format": "󰣇",
+        "tooltip-format": "Open application launcher",
+        "on-click": "uwsm app -- fuzzel"
+    },
+
+    "hyprland/workspaces": {
+        "format": "{name}",
+        "sort-by": "number",
+        "show-special": true,
+        "special-visible-only": true
+    },
+
+    "custom/center-hud": {
+        "format": "{text}",
+        "return-type": "json",
+
+        "exec": "$HOME/.local/bin/waybar-center-hud",
+        "interval": 1,
+
+        "max-length": 78,
+        "escape": true,
+        "tooltip": true,
+
+        "on-click": "$HOME/.local/bin/waybar-center-hud toggle",
+        "on-click-right": "$HOME/.local/bin/waybar-center-hud next",
+        "on-click-middle": "$HOME/.local/bin/waybar-center-hud previous",
+
+        "exec-on-event": true
+    },
+
+    "privacy": {
+        "icon-spacing": 6,
+        "icon-size": 18,
+        "transition-duration": 200,
+
+        "modules": [
+            {
+                "type": "screenshare",
+                "tooltip": true,
+                "tooltip-icon-size": 24
+            },
+            {
+                "type": "audio-in",
+                "tooltip": true,
+                "tooltip-icon-size": 24
+            }
+        ],
+
+        "ignore-monitor": true
+    },
+
+    "custom/gpu": {
+        "format": "{text}",
+        "return-type": "json",
+
+        "exec": "$HOME/.local/bin/gpu-status",
+        "interval": 3,
+
+        "tooltip": true,
+        "hide-empty-text": true,
+
+        "on-click": "uwsm app -- kitty --title 'GPU Monitor' sh -lc 'nvtop'"
+    },
+
+    "idle_inhibitor": {
+        "format": "{icon}",
+
+        "format-icons": {
+            "activated": "󰅶",
+            "deactivated": "󰾪"
+        },
+
+        "tooltip-format-activated": "Automatic locking disabled",
+        "tooltip-format-deactivated": "Automatic locking enabled"
+    },
+
+    "custom/notification": {
+        "tooltip": true,
+        "format": "{icon}",
+
+        "format-icons": {
+            "notification": "󱅫",
+            "none": "󰂜",
+            "dnd-notification": "󰂠",
+            "dnd-none": "󰪓",
+            "inhibited-notification": "󰂛",
+            "inhibited-none": "󰪑",
+            "dnd-inhibited-notification": "󰂛",
+            "dnd-inhibited-none": "󰪑"
+        },
+
+        "return-type": "json",
+        "exec": "swaync-client -swb",
+
+        "on-click": "swaync-client -t -sw",
+        "on-click-right": "swaync-client -d -sw",
+
+        "escape": true
+    },
+
+    "pulseaudio": {
+        "format": "{icon}  {volume}%",
+        "format-muted": "󰖁  Muted",
+
+        "format-icons": {
+            "headphone": "󰋋",
+            "headset": "󰋎",
+
+            "default": [
+                "",
+                "",
+                ""
+            ]
+        },
+
+        "tooltip-format": "{desc}\nVolume: {volume}%",
+
+        "on-click": "uwsm app -- pavucontrol",
+        "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+
+        "scroll-step": 5
+    },
+
+    "network": {
+        "format-wifi": "󰖩",
+        "format-ethernet": "󰈀",
+        "format-linked": "󰈀",
+        "format-disconnected": "󰖪",
+
+        "tooltip-format-wifi": "{essid}\nSignal: {signalStrength}%\n{ipaddr}",
+        "tooltip-format-ethernet": "{ifname}\n{ipaddr}/{cidr}",
+        "tooltip-format-disconnected": "Network disconnected",
+
+        "on-click": "uwsm app -- nm-connection-editor"
+    },
+
+
+    "backlight": {
+        "format": "󰃠  {percent}%",
+        "tooltip-format": "Display brightness: {percent}%",
+        "on-scroll-up": "brightnessctl set +5%",
+        "on-scroll-down": "brightnessctl set 5%-"
+    },
+
+    "battery": {
+        "states": {
+            "warning": 30,
+            "critical": 15
+        },
+
+        "format": "{icon}  {capacity}%",
+        "format-charging": "󰂄  {capacity}%",
+        "format-plugged": "󰚥  {capacity}%",
+
+        "format-icons": [
+            "󰁺",
+            "󰁻",
+            "󰁼",
+            "󰁽",
+            "󰁾",
+            "󰁿",
+            "󰂀",
+            "󰂁",
+            "󰂂",
+            "󰁹"
+        ],
+
+        "tooltip-format": "{capacity}%\n{timeTo}"
+    },
+
+    "cpu": {
+        "format": "  {usage}%",
+        "interval": 2,
+        "tooltip": true
+    },
+
+    "memory": {
+        "format": "  {percentage}%",
+        "interval": 2,
+        "tooltip-format": "{used:0.1f} GiB used"
+    },
+
+    "tray": {
+        "icon-size": 17,
+        "spacing": 9
+    },
+
+    "clock": {
+        "format": "  {:%I:%M %p}",
+        "format-alt": "  {:%a, %b %d}",
+
+        "tooltip-format": "<tt><small>{calendar}</small></tt>",
+
+        "calendar": {
+            "mode": "month",
+            "weeks-pos": "right"
+        }
+    }
+}

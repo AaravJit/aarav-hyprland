@@ -1,0 +1,41 @@
+[config]
+version_check = false
+fallback_color = "#67e8f9"
+prefer = "saturation"
+source_color_index = 0
+caching = true
+contrast = 0.15
+
+[templates.hyprland]
+input_path = "templates/hyprland.lua.tpl"
+output_path = "~/.config/hypr/matugen.lua"
+post_hook = "hyprctl reload"
+
+[templates.waybar]
+input_path = "templates/waybar-colors.css.tpl"
+output_path = "~/.config/waybar/colors.css"
+post_hook = "systemctl --user reset-failed waybar.service; systemctl --user restart waybar.service; systemctl --user try-restart swayosd.service"
+
+[templates.fuzzel]
+input_path = "templates/fuzzel.ini.tpl"
+output_path = "~/.config/fuzzel/fuzzel.ini"
+
+[templates.kitty]
+input_path = "templates/kitty.conf.tpl"
+output_path = "~/.config/kitty/matugen.conf"
+post_hook = "pkill -USR1 kitty || true"
+
+[templates.swaync]
+input_path = "templates/swaync.css.tpl"
+output_path = "~/.config/swaync/style.css"
+post_hook = "swaync-client -rs"
+
+
+[templates.hyprlock-colors]
+input_path = "__HOME__/.config/matugen/templates/hyprlock-colors.conf.tpl"
+output_path = "__HOME__/.config/hypr/hyprlock-colors.conf"
+
+
+[templates.quickshell_overview]
+input_path = "__HOME__/.config/matugen/templates/quickshell-overview.qml"
+output_path = "__HOME__/.config/quickshell/overview/common/Appearance.colors.qml"

@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+backup_root="$HOME/.local/state/hyprland-backups"
+requested="${1:-latest}"
+assume_yes=false
+
+if [[ "${2:-}" == "--yes" || "${1:-}" == "--yes" ]]; then
+    assume_yes=true
+fi
+
+if [[ "$requested" == "--yes" ]]; then
+    requested="latest"
+fi
+
+if [[ "$requested" == "latest" ]]; then
+    archive="$(
+        find "$backup_root" \
+            -maxdepth 1 \
+            -type f \
+            -name 'hyprland-*.tar.gz' \
+            -printf '%T@ %p\n' |
+            sort -rn |
+            head -1 |
+            cut -d' ' -f2-
+    )"
+else
+    archive="$requested"
+fi
+
+if [[ -z "${archive:-}" || ! -f "$archive" ]]; then
+    echo "Snapshot not found."
+    exit 1
+fi
+
+checksum="$archive.sha256"
+
+if [[ -f "$checksum" ]]; then
+    (
+        cd "$(dirname "$archive")"
+        sha256sum -c "$(basename "$checksum")"
+    )
+else
+    echo "Warning: no checksum file was found."
+fi
+
+echo
+echo "Snapshot selected:"
+echo "$archive"
+echo
+
+if [[ "$assume_yes" == false ]]; then
+    read -r -p "Restore this snapshot? [y/N] " answer
+
+    case "$answer" in
+        y|Y|yes|YES)
+            ;;
+        *)
+            echo "Restore cancelled."
+            exit 0
+            ;;
+    esac
+fi
+
+echo "Creating emergency snapshot of the current state..."
+"$HOME/.local/bin/hypr-snapshot" --quiet
+
+temporary="$(mktemp -d)"
+trap 'rm -rf "$temporary"' EXIT
+
+tar \
+    -C "$temporary" \
+    -xzf "$archive"
+
+rm -rf "$temporary/.snapshot-meta"
+
+# Merge the snapshot into the home directory. This deliberately avoids
+# deleting unrelated files that may have been created after the snapshot.
+cp -a "$temporary"/. "$HOME"/
+
+systemctl --user daemon-reload
+systemctl --user reset-failed
+
+hyprctl reload >/dev/null 2>&1 || true
+
+for unit in \
+    waybar.service \
+    swaync.service \
+    swayosd.service \
+    quickshell-overview.service \
+    hyprpaper.service \
+    hyprsunset.service
+do
+    systemctl --user try-restart "$unit" \
+        >/dev/null 2>&1 || true
+done
+
+echo
+echo "Restore completed."
+echo "Run:"
+echo "  hypr-health"

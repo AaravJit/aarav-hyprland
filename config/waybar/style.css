@@ -1,0 +1,285 @@
+@import "colors.css";
+@import "profile.css";
+
+* {
+    border: none;
+    border-radius: 0;
+
+    font-family:
+        "Noto Sans",
+        "Symbols Nerd Font Mono",
+        sans-serif;
+
+    font-size: 14px;
+    min-height: 0;
+}
+
+window#waybar {
+    background-color: transparent;
+    color: @on_surface;
+}
+
+tooltip {
+    background-color: alpha(@surface_container_high, 0.96);
+
+    border: 1px solid alpha(@outline_variant, 0.52);
+    border-radius: 12px;
+}
+
+tooltip label {
+    color: @on_surface;
+    padding: 7px;
+}
+
+#custom-launcher,
+#workspaces,
+#custom-center-hud,
+#privacy,
+#custom-gpu,
+#idle_inhibitor,
+#custom-notification,
+#pulseaudio,
+#network,
+#backlight,
+#battery,
+#cpu,
+#memory,
+#tray,
+#clock {
+    background-color: alpha(@surface_container, 0.80);
+
+    border: 1px solid alpha(@outline_variant, 0.36);
+    border-radius: 13px;
+
+    color: @on_surface;
+
+    margin: 0 2px;
+    padding: 0 13px;
+
+    box-shadow: 0 3px 10px alpha(@shadow, 0.45);
+}
+
+#custom-launcher {
+    color: @primary;
+
+    font-family:
+        "Symbols Nerd Font Mono",
+        sans-serif;
+
+    font-size: 20px;
+    padding: 0 16px;
+}
+
+#custom-launcher:hover {
+    background-color: alpha(@surface_container_high, 0.94);
+    color: @on_surface;
+}
+
+#workspaces {
+    padding: 0 5px;
+}
+
+#workspaces button {
+    background-color: transparent;
+    color: @on_surface_variant;
+
+    border-radius: 9px;
+
+    min-width: 25px;
+    margin: 4px 1px;
+    padding: 0 8px;
+
+    font-weight: 600;
+}
+
+#workspaces button:hover {
+    background-color: alpha(@surface_container_highest, 0.65);
+    color: @on_surface;
+}
+
+#workspaces button.active {
+    background-color: alpha(@primary_container, 0.78);
+    color: @on_primary_container;
+}
+
+#workspaces button.special {
+    color: @tertiary;
+}
+
+#workspaces button.urgent {
+    background-color: alpha(@error_container, 0.90);
+    color: @on_error_container;
+}
+
+/* Reactive center capsule */
+
+#custom-center-hud {
+    min-width: 470px;
+    padding: 0 20px;
+
+    font-weight: 600;
+}
+
+#custom-center-hud.window {
+    color: @on_surface;
+}
+
+#custom-center-hud.media-playing {
+    background-color: alpha(@primary_container, 0.82);
+    border-color: alpha(@primary, 0.72);
+    color: @on_primary_container;
+}
+
+#custom-center-hud.media-paused {
+    background-color: alpha(@surface_container_high, 0.90);
+    border-color: alpha(@tertiary, 0.62);
+    color: @tertiary;
+}
+
+/* Privacy indicators only occupy space while active */
+
+#privacy {
+    padding: 0 11px;
+}
+
+#privacy-item {
+    color: @on_surface;
+}
+
+#privacy-item.screenshare {
+    color: @error;
+}
+
+#privacy-item.audio-in {
+    color: @tertiary;
+}
+
+/* Cross-vendor GPU HUD */
+
+#custom-gpu {
+    font-family:
+        "Symbols Nerd Font Mono",
+        "Noto Sans",
+        sans-serif;
+
+    font-weight: 600;
+}
+
+#custom-gpu.cool {
+    color: @tertiary;
+}
+
+#custom-gpu.warm {
+    color: @primary;
+}
+
+#custom-gpu.hot {
+    color: @error;
+}
+
+#custom-gpu.critical {
+    background-color: alpha(@error_container, 0.92);
+    border-color: @error;
+    color: @on_error_container;
+}
+
+/* Other status modules */
+
+#idle_inhibitor,
+#custom-notification,
+#network {
+    font-family:
+        "Symbols Nerd Font Mono",
+        "Noto Sans",
+        sans-serif;
+
+    font-size: 17px;
+}
+
+#idle_inhibitor.activated {
+    color: @primary;
+}
+
+#custom-notification.notification {
+    color: @tertiary;
+}
+
+#pulseaudio.muted,
+#network.disconnected {
+    color: @error;
+}
+
+#custom-center-hud:hover,
+#custom-gpu:hover,
+#pulseaudio:hover,
+#network:hover,
+#idle_inhibitor:hover,
+#custom-notification:hover,
+#clock:hover {
+    background-color: alpha(@surface_container_high, 0.94);
+}
+
+#cpu,
+#memory {
+    color: @on_surface_variant;
+}
+
+#clock {
+    color: @on_surface;
+    font-weight: 600;
+}
+
+#tray {
+    padding: 0 11px;
+}
+
+
+/* Gaming Mode HUD */
+
+#custom-gaming {
+    background-color: alpha(@primary_container, 0.90);
+    color: @on_primary_container;
+
+    border: 1px solid alpha(@primary, 0.82);
+    border-radius: 12px;
+
+    margin: 0 2px;
+    padding: 0 15px;
+
+    font-family:
+        "Noto Sans",
+        "Symbols Nerd Font Mono",
+        sans-serif;
+
+    font-weight: 800;
+
+    box-shadow: 0 3px 12px alpha(@shadow, 0.48);
+}
+
+#custom-gaming:hover {
+    background-color: @primary;
+    color: @surface;
+}
+
+
+/* Laptop-capable modules */
+
+#battery,
+#backlight {
+    color: @on_surface_variant;
+}
+
+#battery.charging,
+#battery.plugged {
+    color: @tertiary;
+}
+
+#battery.warning {
+    color: @primary;
+}
+
+#battery.critical {
+    background-color: alpha(@error_container, 0.90);
+    border-color: @error;
+    color: @on_error_container;
+}

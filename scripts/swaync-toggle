@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+action="${1:-}"
+state="${SWAYNC_TOGGLE_STATE:-false}"
+
+case "$action" in
+    wifi)
+        if [[ "$state" == "true" ]]; then
+            nmcli radio wifi on
+        else
+            nmcli radio wifi off
+        fi
+        ;;
+
+    wifi-status)
+        if [[ "$(nmcli radio wifi 2>/dev/null)" == "enabled" ]]; then
+            echo true
+        else
+            echo false
+        fi
+        ;;
+
+    night)
+        exec "$HOME/.local/bin/night-light" set "$state"
+        ;;
+
+    night-status)
+        exec "$HOME/.local/bin/night-light" status
+        ;;
+
+    idle)
+        if [[ "$state" == "true" ]]; then
+            systemctl --user start hypridle.service
+        else
+            systemctl --user stop hypridle.service
+        fi
+        ;;
+
+    idle-status)
+        if systemctl --user is-active --quiet hypridle.service; then
+            echo true
+        else
+            echo false
+        fi
+        ;;
+
+    gaming)
+        exec "$HOME/.local/bin/gaming-mode" set "$state"
+        ;;
+
+    gaming-status)
+        exec "$HOME/.local/bin/gaming-mode" status
+        ;;
+
+    *)
+        echo "Unknown SwayNC toggle action: $action" >&2
+        exit 2
+        ;;
+esac

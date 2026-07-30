@@ -1,0 +1,13 @@
+[Unit]
+Description=Quickshell workspace overview
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/qs -c overview
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

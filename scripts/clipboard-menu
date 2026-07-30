@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+selection="$(
+    cliphist list |
+        fuzzel \
+            --dmenu \
+            --with-nth=2 \
+            --prompt='Clipboard > '
+)" || exit 0
+
+[[ -n "$selection" ]] || exit 0
+
+printf '%s\n' "$selection" |
+    cliphist decode |
+    wl-copy
+
+notify-send \
+    "Clipboard restored" \
+    "The selected item is ready to paste."
