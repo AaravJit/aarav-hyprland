@@ -3,8 +3,16 @@
 import glob
 import json
 import os
+import re
 import subprocess
 from typing import Any
+
+
+PCI_VENDOR_MAP = {
+    "10de": "nvidia",
+    "1002": "amd",
+    "8086": "intel",
+}
 
 
 def run(command: list[str]) -> str:
@@ -37,6 +45,37 @@ def json_command(command: list[str]) -> Any:
         return None
 
 
+def detect_vendor(line: str) -> str | None:
+    """Detect a display controller vendor without substring false positives."""
+
+    lowered = line.lower()
+
+    # Prefer the actual PCI vendor ID, for example [10de:2882].
+    for vendor_id, _device_id in re.findall(
+        r"\[([0-9a-fA-F]{4}):([0-9a-fA-F]{4})\]",
+        line,
+    ):
+        vendor = PCI_VENDOR_MAP.get(vendor_id.lower())
+
+        if vendor:
+            return vendor
+
+    # Conservative fallback for unusual lspci output.
+    if re.search(r"\bnvidia\b", lowered):
+        return "nvidia"
+
+    if re.search(
+        r"\badvanced micro devices\b|\bamd/ati\b|\bati technologies\b",
+        lowered,
+    ):
+        return "amd"
+
+    if re.search(r"\bintel\b", lowered):
+        return "intel"
+
+    return None
+
+
 pci_output = run(["lspci", "-nn"])
 
 display_lines = [
@@ -55,27 +94,10 @@ display_lines = [
 vendors: list[str] = []
 
 for line in display_lines:
-    lowered = line.lower()
+    vendor = detect_vendor(line)
 
-    if (
-        "nvidia" in lowered
-        or "[10de:" in lowered
-    ) and "nvidia" not in vendors:
-        vendors.append("nvidia")
-
-    if (
-        "amd" in lowered
-        or "advanced micro devices" in lowered
-        or "ati" in lowered
-        or "[1002:" in lowered
-    ) and "amd" not in vendors:
-        vendors.append("amd")
-
-    if (
-        "intel" in lowered
-        or "[8086:" in lowered
-    ) and "intel" not in vendors:
-        vendors.append("intel")
+    if vendor and vendor not in vendors:
+        vendors.append(vendor)
 
 
 battery_paths = sorted(
@@ -125,9 +147,8 @@ touchpads: list[str] = []
 if isinstance(devices_data, dict):
     for mouse in devices_data.get("mice", []):
         name = str(mouse.get("name") or "")
-        lowered = name.lower()
 
-        if "touchpad" in lowered:
+        if "touchpad" in name.lower():
             touchpads.append(name)
 
 

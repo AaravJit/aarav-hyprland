@@ -13,33 +13,9 @@ if [[ ! -d "$root" ]]; then
     exit 1
 fi
 
-report_matches() {
-    local heading="$1"
-    local pattern="$2"
-    local limit="${3:-60}"
-    local count
-
-    echo
-    echo "========================================"
-    echo "$heading"
-    echo "========================================"
-
-    count="$(
-        grep \
-            -RInI \
-            -E "$pattern" \
-            --exclude-dir=.git \
-            --exclude='*.png' \
-            --exclude='*.jpg' \
-            --exclude='*.jpeg' \
-            --exclude='*.webp' \
-            --exclude='*.gif' \
-            "$root" \
-            2>/dev/null |
-            wc -l
-    )"
-
-    echo "Matches: $count"
+grep_matches() {
+    local pattern="$1"
+    local output_file="$2"
 
     grep \
         -RInI \
@@ -50,9 +26,35 @@ report_matches() {
         --exclude='*.jpeg' \
         --exclude='*.webp' \
         --exclude='*.gif' \
+        --exclude='README.md' \
+        --exclude='*.before-*' \
+        --exclude='*.stage*' \
+        --exclude='*.baseline-*' \
+        --exclude='*.working' \
         "$root" \
-        2>/dev/null |
-        head -n "$limit" || true
+        > "$output_file" \
+        2>/dev/null || true
+}
+
+report_matches() {
+    local heading="$1"
+    local pattern="$2"
+    local limit="${3:-60}"
+    local temporary
+
+    temporary="$(mktemp)"
+
+    grep_matches "$pattern" "$temporary"
+
+    echo
+    echo "========================================"
+    echo "$heading"
+    echo "========================================"
+    echo "Matches: $(wc -l < "$temporary")"
+
+    head -n "$limit" "$temporary"
+
+    rm -f "$temporary"
 }
 
 echo "========================================"
@@ -111,4 +113,12 @@ if git check-ignore -q .local-import; then
 else
     echo "[FAIL] .local-import is not ignored."
     exit 1
+fi
+
+if git status --short --ignored |
+    grep -q '^!! .local-import/'
+then
+    echo "[PASS] Git explicitly reports the import as ignored."
+else
+    echo "[WARN] Could not confirm ignored import through git status."
 fi
