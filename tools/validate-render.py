@@ -350,27 +350,35 @@ def main() -> None:
                 ),
             )
 
-    gpu_status = (
+    gpu_status_path = (
         root / ".local/bin/gpu-status"
-    ).read_text()
+    )
 
-    for backend in (
-        "nvidia",
-        "amd",
-        "intel",
-    ):
-        if backend in gpu_status.lower():
-            pass_result(
-                f"GPU status includes {backend} backend"
-            )
-        else:
-            fail_result(
-                failures,
-                (
-                    "GPU status is missing "
-                    f"{backend} handling"
-                ),
-            )
+    if gpu_status_path.is_file():
+        gpu_status = gpu_status_path.read_text()
+
+        for backend in (
+            "nvidia",
+            "amd",
+            "intel",
+        ):
+            if backend in gpu_status.lower():
+                pass_result(
+                    f"GPU status includes {backend} backend"
+                )
+            else:
+                fail_result(
+                    failures,
+                    (
+                        "GPU status is missing "
+                        f"{backend} handling"
+                    ),
+                )
+    else:
+        fail_result(
+            failures,
+            "GPU status source is unavailable",
+        )
 
     print()
     print("========================================")

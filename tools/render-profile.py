@@ -668,6 +668,14 @@ def main() -> None:
         values,
     )
 
+    gpu_status_source = REPO / "scripts/gpu-status"
+
+    if not gpu_status_source.is_file():
+        raise SystemExit(
+            "Missing required source file: "
+            "scripts/gpu-status"
+        )
+
     copy_rendered_tree(
         REPO / "scripts",
         output / ".local/bin",

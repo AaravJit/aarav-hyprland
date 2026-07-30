@@ -1,0 +1,362 @@
+#!/usr/bin/env python3
+
+from __future__ import annotations
+
+import glob
+import json
+import re
+import shutil
+import subprocess
+from pathlib import Path
+from typing import Any
+
+
+VENDORS = {
+    "0x10de": "nvidia",
+    "0x1002": "amd",
+    "0x8086": "intel",
+}
+
+
+def run(command: list[str]) -> str:
+    try:
+        result = subprocess.run(
+            command,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+
+    return result.stdout.strip() if result.returncode == 0 else ""
+
+
+def read_text(path: Path) -> str:
+    try:
+        return path.read_text().strip()
+    except OSError:
+        return ""
+
+
+def read_number(
+    paths: list[Path],
+    divisor: float = 1.0,
+) -> float | None:
+    for path in paths:
+        raw = read_text(path)
+
+        try:
+            return float(raw) / divisor
+        except ValueError:
+            continue
+
+    return None
+
+
+def temperature_class(
+    temperature: float | None,
+) -> str:
+    if temperature is None or temperature < 65:
+        return "cool"
+
+    if temperature < 75:
+        return "warm"
+
+    if temperature < 85:
+        return "hot"
+
+    return "critical"
+
+
+def emit(payload: dict[str, Any]) -> None:
+    print(json.dumps(payload, ensure_ascii=False))
+
+
+def preferred_vendor() -> str:
+    machine = (
+        Path.home()
+        / ".config/aarav-hyprland/machine.json"
+    )
+
+    try:
+        data = json.loads(machine.read_text())
+    except (OSError, json.JSONDecodeError):
+        return "auto"
+
+    vendor = data.get("gpu")
+
+    if vendor in {"nvidia", "amd", "intel"}:
+        return str(vendor)
+
+    return "auto"
+
+
+def nvidia_payload() -> dict[str, Any] | None:
+    if shutil.which("nvidia-smi") is None:
+        return None
+
+    query = (
+        "name,"
+        "temperature.gpu,"
+        "utilization.gpu,"
+        "memory.used,"
+        "memory.total,"
+        "power.draw,"
+        "clocks.current.graphics"
+    )
+
+    raw = run([
+        "nvidia-smi",
+        f"--query-gpu={query}",
+        "--format=csv,noheader,nounits",
+    ])
+
+    if not raw:
+        return None
+
+    fields = [
+        value.strip()
+        for value in raw.splitlines()[0].split(",")
+    ]
+
+    if len(fields) < 7:
+        return None
+
+    def number(value: str) -> float | None:
+        match = re.search(
+            r"-?\d+(?:\.\d+)?",
+            value,
+        )
+
+        return (
+            float(match.group())
+            if match
+            else None
+        )
+
+    name = fields[0]
+    temperature = number(fields[1])
+    utilization = number(fields[2])
+    memory_used = number(fields[3])
+    memory_total = number(fields[4])
+    power = number(fields[5])
+    clock = number(fields[6])
+
+    display = ["󰢮"]
+
+    if temperature is not None:
+        display.append(f"{temperature:.0f}°")
+
+    if utilization is not None:
+        display.append(f"{utilization:.0f}%")
+
+    tooltip = [
+        name,
+        "Vendor: NVIDIA",
+    ]
+
+    if temperature is not None:
+        tooltip.append(
+            f"Temperature: {temperature:.0f}°C"
+        )
+
+    if utilization is not None:
+        tooltip.append(
+            f"GPU usage: {utilization:.0f}%"
+        )
+
+    if (
+        memory_used is not None
+        and memory_total is not None
+    ):
+        tooltip.append(
+            "VRAM: "
+            f"{memory_used / 1024:.1f} / "
+            f"{memory_total / 1024:.1f} GiB"
+        )
+
+    if power is not None:
+        tooltip.append(f"Power: {power:.1f} W")
+
+    if clock is not None:
+        tooltip.append(
+            f"Graphics clock: {clock:.0f} MHz"
+        )
+
+    tooltip.extend(["", "Click to open nvtop"])
+
+    return {
+        "text": "  ".join(display),
+        "tooltip": "\n".join(tooltip),
+        "class": temperature_class(temperature),
+        "percentage": round(utilization or 0),
+        "alt": "nvidia",
+    }
+
+
+def drm_devices(
+    wanted_vendor: str,
+) -> list[tuple[str, Path]]:
+    devices: list[tuple[str, Path]] = []
+
+    for card_name in sorted(
+        glob.glob("/sys/class/drm/card[0-9]*")
+    ):
+        card = Path(card_name)
+        device = card / "device"
+
+        vendor = VENDORS.get(
+            read_text(device / "vendor").lower()
+        )
+
+        if vendor not in {"amd", "intel"}:
+            continue
+
+        if (
+            wanted_vendor in {"amd", "intel"}
+            and vendor != wanted_vendor
+        ):
+            continue
+
+        devices.append((vendor, device))
+
+    return devices
+
+
+def sysfs_payload(
+    vendor: str,
+    device: Path,
+) -> dict[str, Any]:
+    hwmons = [
+        Path(path)
+        for path in glob.glob(
+            str(device / "hwmon/hwmon*")
+        )
+    ]
+
+    temperature = read_number(
+        [
+            hwmon / "temp1_input"
+            for hwmon in hwmons
+        ],
+        divisor=1000,
+    )
+
+    utilization = read_number([
+        device / "gpu_busy_percent",
+        device / "gt_busy_percent",
+    ])
+
+    memory_used = read_number([
+        device / "mem_info_vram_used",
+    ])
+
+    memory_total = read_number([
+        device / "mem_info_vram_total",
+    ])
+
+    power_paths: list[Path] = []
+
+    for hwmon in hwmons:
+        power_paths.extend([
+            hwmon / "power1_average",
+            hwmon / "power1_input",
+        ])
+
+    power = read_number(
+        power_paths,
+        divisor=1_000_000,
+    )
+
+    display = ["󰢮"]
+
+    if temperature is not None:
+        display.append(f"{temperature:.0f}°")
+
+    if utilization is not None:
+        display.append(f"{utilization:.0f}%")
+
+    if len(display) == 1:
+        display.append(vendor.upper())
+
+    tooltip = [
+        f"{vendor.upper()} GPU",
+        f"Vendor: {vendor.upper()}",
+    ]
+
+    if temperature is not None:
+        tooltip.append(
+            f"Temperature: {temperature:.0f}°C"
+        )
+
+    if utilization is not None:
+        tooltip.append(
+            f"GPU usage: {utilization:.0f}%"
+        )
+
+    if (
+        memory_used is not None
+        and memory_total is not None
+        and memory_total > 0
+    ):
+        gib = 1024 ** 3
+
+        tooltip.append(
+            "VRAM: "
+            f"{memory_used / gib:.1f} / "
+            f"{memory_total / gib:.1f} GiB"
+        )
+
+    if power is not None:
+        tooltip.append(f"Power: {power:.1f} W")
+
+    tooltip.extend([
+        "",
+        "Some integrated-GPU metrics",
+        "may not be exposed by the kernel.",
+        "",
+        "Click to open nvtop",
+    ])
+
+    return {
+        "text": "  ".join(display),
+        "tooltip": "\n".join(tooltip),
+        "class": temperature_class(temperature),
+        "percentage": round(utilization or 0),
+        "alt": vendor,
+    }
+
+
+def main() -> None:
+    vendor = preferred_vendor()
+
+    if vendor in {"nvidia", "auto"}:
+        payload = nvidia_payload()
+
+        if payload is not None:
+            emit(payload)
+            return
+
+    devices = drm_devices(vendor)
+
+    if devices:
+        detected_vendor, device = devices[0]
+        emit(sysfs_payload(detected_vendor, device))
+        return
+
+    emit({
+        "text": "",
+        "tooltip": (
+            "No supported NVIDIA, AMD, or Intel "
+            "GPU metrics were found."
+        ),
+        "class": "offline",
+        "percentage": 0,
+        "alt": "offline",
+    })
+
+
+if __name__ == "__main__":
+    main()

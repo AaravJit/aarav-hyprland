@@ -27,3 +27,7 @@ local.lua
 *.swp
 *.swo
 *~
+
+# Python build artifacts
+__pycache__/
+*.py[cod]
