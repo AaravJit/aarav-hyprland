@@ -1,0 +1,25 @@
+{
+  "hostname": "test-amd-laptop",
+  "profile": "laptop",
+  "gpu_vendors": ["amd"],
+  "display_controllers": ["AMD Radeon integrated graphics"],
+  "primary_monitor": "eDP-1",
+  "monitors": [
+    {
+      "name": "eDP-1",
+      "description": "Generic AMD laptop display",
+      "width": 1920,
+      "height": 1200,
+      "refresh_rate": 60.0,
+      "scale": 1.25,
+      "focused": true,
+      "disabled": false
+    }
+  ],
+  "has_battery": true,
+  "batteries": ["BAT0"],
+  "has_backlight": true,
+  "backlights": ["amdgpu_bl1"],
+  "has_touchpad": true,
+  "touchpads": ["generic-amd-touchpad"]
+}

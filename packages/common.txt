@@ -1,0 +1,54 @@
+# Session and compositor
+hyprland
+uwsm
+xdg-desktop-portal-hyprland
+
+# Hyprland ecosystem
+hyprlock
+hypridle
+hyprpaper
+hyprsunset
+hyprpolkitagent
+
+# Shell components
+waybar
+swaync
+swayosd
+quickshell
+matugen
+fuzzel
+kitty
+
+# Desktop utilities
+dolphin
+pavucontrol
+playerctl
+networkmanager
+wireplumber
+nvtop
+pciutils
+
+# Clipboard and screenshots
+wl-clipboard
+cliphist
+grim
+slurp
+swappy
+
+# Themes and fonts
+qt5ct
+qt6ct
+kvantum
+noto-fonts
+ttf-nerd-fonts-symbols-mono
+
+# Installer/runtime dependencies
+python
+lua
+git
+rsync
+curl
+jq
+less
+xdg-utils
+libnotify

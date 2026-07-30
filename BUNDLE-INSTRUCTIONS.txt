@@ -1,0 +1,12 @@
+Extract this bundle into the root of the aarav-hyprland repository.
+
+Example:
+
+  cd ~/Projects/aarav-hyprland
+  tar -xzf /path/to/aarav-hyprland-installer-bundle.tar.gz --strip-components=1
+
+Then validate:
+
+  bash -n install.sh doctor.sh restore.sh uninstall.sh
+  python -m py_compile tools/state-manager.py
+  ./install.sh --dry-run

@@ -1,0 +1,25 @@
+{
+  "hostname": "test-intel-laptop",
+  "profile": "laptop",
+  "gpu_vendors": ["intel"],
+  "display_controllers": ["Intel integrated graphics"],
+  "primary_monitor": "eDP-1",
+  "monitors": [
+    {
+      "name": "eDP-1",
+      "description": "Generic Intel laptop display",
+      "width": 2880,
+      "height": 1800,
+      "refresh_rate": 120.0,
+      "scale": 1.5,
+      "focused": true,
+      "disabled": false
+    }
+  ],
+  "has_battery": true,
+  "batteries": ["BAT0"],
+  "has_backlight": true,
+  "backlights": ["intel_backlight"],
+  "has_touchpad": true,
+  "touchpads": ["generic-intel-touchpad"]
+}

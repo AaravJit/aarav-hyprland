@@ -1,0 +1,2 @@
+# Graphics drivers are intentionally not managed.
+# Selected profile: generic
