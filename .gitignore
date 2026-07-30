@@ -1,0 +1,29 @@
+# Local imports and build products
+.local-import/
+.local-build/
+generated/
+**/generated/
+
+# Machine-generated configuration
+machine.lua
+local.lua
+.env
+
+# Generated wallpaper/theme state
+**/wallpaper-current.*
+**/colors.css
+**/hyprlock-colors.conf
+**/Appearance.colors.qml
+
+# Runtime and backup files
+*.tar.gz
+*.sha256
+*.log
+*.pid
+*.lock
+
+# Editor and desktop noise
+.DS_Store
+*.swp
+*.swo
+*~
