@@ -1,0 +1,80 @@
+@import url("../waybar/colors.css");
+
+window {
+    background-color: alpha(@surface, 0.82);
+}
+
+#outer-box {
+    margin: 0;
+    padding: 0;
+}
+
+#inner-box {
+    background-color: alpha(@surface, 0.94);
+
+    border: 1px solid alpha(@on_surface_variant, 0.28);
+    border-radius: 36px;
+
+    padding: 26px;
+    margin: 20px;
+
+    box-shadow:
+        0 18px 55px alpha(black, 0.48);
+}
+
+button {
+    color: @on_surface;
+    background-color: alpha(@on_surface_variant, 0.08);
+
+    border: 1px solid alpha(@on_surface_variant, 0.18);
+    border-radius: 28px;
+
+    min-width: 150px;
+    min-height: 150px;
+
+    margin: 12px;
+    padding: 22px;
+
+    box-shadow:
+        0 8px 22px alpha(black, 0.22);
+
+    transition:
+        background-color 180ms ease,
+        border-color 180ms ease,
+        box-shadow 180ms ease;
+}
+
+button:hover,
+button:focus {
+    color: @on_surface;
+    background-color: alpha(@primary, 0.24);
+
+    border-color: @primary;
+
+    box-shadow:
+        0 12px 30px alpha(black, 0.34);
+}
+
+button:active {
+    background-color: alpha(@primary, 0.38);
+}
+
+button image {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+
+    margin-bottom: 10px;
+}
+
+button label {
+    color: @on_surface;
+
+    font-family:
+        "Noto Sans",
+        "Symbols Nerd Font Mono",
+        sans-serif;
+
+    font-size: 18px;
+    font-weight: 700;
+}

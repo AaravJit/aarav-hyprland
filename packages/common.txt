@@ -52,3 +52,5 @@ jq
 less
 xdg-utils
 libnotify
+
+nwg-bar

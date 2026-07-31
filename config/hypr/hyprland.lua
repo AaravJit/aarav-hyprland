@@ -495,10 +495,7 @@ hl.layer_rule({
 ------------------------------------------
 
 -- Lock the session.
-hl.bind(
-    mainMod .. " + ESCAPE",
-    hl.dsp.exec_cmd("$HOME/.local/bin/lock-screen")
-)
+
 
 -- Select and apply a wallpaper.
 hl.bind(
@@ -706,3 +703,5 @@ hl.bind(
 --------------------------------
 
 require("generated.hardware")
+
+require("power-menu")

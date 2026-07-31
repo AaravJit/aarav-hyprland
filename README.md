@@ -471,7 +471,8 @@ The installer does not intentionally modify:
 | `Super + Tab` | Workspace overview |
 | `Super + Ctrl + G` | Toggle Gaming Mode |
 | `Super + Ctrl + R` | Safe configuration reload |
-| `Super + Esc` | Lock |
+| `Super + Esc` | Open power menu |
+| `Super + L` | Lock screen |
 | `Super + Shift + Esc` | Log out |
 | `Super + 1–5` | Switch workspace |
 | `Super + Shift + 1–5` | Move window to workspace |

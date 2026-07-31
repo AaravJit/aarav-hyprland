@@ -72,7 +72,7 @@ echo
 echo "--- Required commands ---"
 
 commands=(
-    hyprctl uwsm waybar swaync-client swayosd-client
+    hyprctl uwsm waybar nwg-bar swaync-client swayosd-client
     hyprlock hypridle hyprpaper hyprsunset qs matugen
     fuzzel kitty playerctl wpctl nmcli nvtop wl-copy
     cliphist grim slurp swappy python luac
@@ -107,6 +107,8 @@ required_files=(
     ".config/waybar/config-gaming.jsonc"
     ".config/waybar/style.css"
     ".config/waybar/colors.css"
+    ".config/nwg-bar/bar.json"
+    ".config/nwg-bar/style.css"
     ".config/swaync/config.json"
     ".config/swaync/style.css"
     ".config/swayosd/config.toml"

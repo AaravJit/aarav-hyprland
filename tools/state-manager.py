@@ -15,6 +15,7 @@ from typing import Any
 REPLACE_ROOTS = (
     ".config/hypr",
     ".config/waybar",
+    ".config/nwg-bar",
     ".config/swaync",
     ".config/swayosd",
     ".config/matugen",

@@ -1,0 +1,27 @@
+[
+  {
+    "label": "Lock",
+    "exec": "sh -lc '$HOME/.local/bin/lock-screen'",
+    "icon": "/usr/share/nwg-bar/images/system-lock-screen.svg"
+  },
+  {
+    "label": "Sleep",
+    "exec": "systemctl suspend",
+    "icon": "/usr/share/nwg-bar/images/system-suspend.svg"
+  },
+  {
+    "label": "Logout",
+    "exec": "uwsm stop",
+    "icon": "/usr/share/nwg-bar/images/system-log-out.svg"
+  },
+  {
+    "label": "Restart",
+    "exec": "systemctl reboot",
+    "icon": "/usr/share/nwg-bar/images/system-reboot.svg"
+  },
+  {
+    "label": "Shut Down",
+    "exec": "systemctl poweroff",
+    "icon": "/usr/share/nwg-bar/images/system-shutdown.svg"
+  }
+]
