@@ -31,7 +31,13 @@ selection="$(
         sort |
         fuzzel \
             --dmenu \
-            --prompt='Wallpaper > '
+            --no-icons \
+            --message='Wallpaper and color theme' \
+            --prompt='  ' \
+            --placeholder='Search wallpaper files' \
+            --width=72 \
+            --lines=10 \
+            --minimal-lines
 )" || exit 0
 
 [[ -f "$selection" ]] || exit 0
