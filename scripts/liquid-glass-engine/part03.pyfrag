@@ -1,0 +1,280 @@
+    border: none;
+    border-radius: 18px;
+    color: {p["on_surface"]};
+}}
+
+.notification-default-action:hover,
+.notification-action:hover {{
+    background: {css_color(p["primary_container"], 0.42)};
+}}
+
+.summary {{
+    color: {p["on_surface"]};
+    font-size: 15px;
+    font-weight: 700;
+}}
+
+.body {{
+    color: {p["on_surface_variant"]};
+    font-size: 13px;
+}}
+
+.time {{
+    color: {p["outline"]};
+    font-size: 12px;
+    margin-right: 30px;
+}}
+
+.close-button {{
+    background: {css_color(p["surface_container_highest"], 0.58)};
+    color: {p["on_surface"]};
+    border: 1px solid {css_color(p["on_surface"], 0.10)};
+    border-radius: 999px;
+    min-width: 26px;
+    min-height: 26px;
+}}
+
+.close-button:hover {{
+    background: {css_color(p["error_container"], 0.86)};
+    color: {p["on_error_container"]};
+    border-color: {css_color(p["error"], 0.55)};
+}}
+
+.notification.critical {{
+    border-color: {css_color(p["error"], 0.72)};
+}}
+
+.widget-title,
+.widget-dnd,
+.widget-mpris,
+.widget-volume {{
+    background: {css_color(p["surface_container_high"], 0.60)};
+    border: 1px solid {css_color(p["on_surface"], 0.13)};
+    border-top-color: {css_color(p["on_surface"], 0.21)};
+    border-radius: 21px;
+    color: {p["on_surface"]};
+    margin: 6px;
+    padding: 13px;
+    box-shadow: inset 0 1px 0 {css_color(p["on_surface"], 0.07)};
+}}
+
+.widget-title > label {{
+    color: {p["on_surface"]};
+    font-size: 19px;
+    font-weight: 700;
+}}
+
+.widget-title > button {{
+    background: {css_color(p["surface_container_highest"], 0.54)};
+    color: {p["on_surface_variant"]};
+    border: 1px solid {css_color(p["on_surface"], 0.10)};
+    border-radius: 14px;
+    padding: 8px 13px;
+}}
+
+.widget-title > button:hover {{
+    background: {css_color(p["error_container"], 0.72)};
+    color: {p["on_error_container"]};
+}}
+
+.widget-dnd > switch {{
+    background: {css_color(p["surface_container_highest"], 0.76)};
+    border: 1px solid {css_color(p["on_surface"], 0.12)};
+    border-radius: 999px;
+}}
+
+.widget-dnd > switch:checked {{
+    background: {css_color(p["primary"], 0.88)};
+}}
+
+.widget-dnd > switch slider {{
+    background: {p["on_primary"]};
+    border-radius: 999px;
+}}
+
+.widget-mpris-player {{
+    background: {css_color(p["surface_container_low"], 0.54)};
+    border-radius: 18px;
+    padding: 11px;
+}}
+
+.widget-volume trough {{
+    background: {css_color(p["outline_variant"], 0.58)};
+    border-radius: 999px;
+    min-height: 8px;
+}}
+
+.widget-volume highlight {{
+    background: {p["primary"]};
+    border-radius: 999px;
+}}
+
+.widget-volume slider {{
+    background: {p["on_primary"]};
+    border-radius: 999px;
+    min-width: 15px;
+    min-height: 15px;
+}}
+
+.widget-buttons-grid {{
+    margin: 4px;
+}}
+
+.widget-buttons-grid > flowbox {{
+    padding: 0;
+}}
+
+.widget-buttons-grid > flowbox > flowboxchild {{
+    padding: 5px;
+}}
+
+.widget-buttons-grid > flowbox > flowboxchild > button {{
+    background: {css_color(p["surface_container_high"], 0.66)};
+    color: {p["on_surface"]};
+    border: 1px solid {css_color(p["on_surface"], 0.14)};
+    border-top-color: {css_color(p["on_surface"], 0.22)};
+    border-radius: 18px;
+    min-width: 112px;
+    min-height: 52px;
+    padding: 11px 14px;
+    font-family: "Noto Sans", "Symbols Nerd Font Mono", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: inset 0 1px 0 {css_color(p["on_surface"], 0.07)};
+}}
+
+.widget-buttons-grid > flowbox > flowboxchild > button:hover {{
+    background: {css_color(p["surface_container_highest"], 0.74)};
+    border-color: {css_color(p["primary"], 0.42)};
+}}
+
+.widget-buttons-grid > flowbox > flowboxchild > button.toggle:checked {{
+    background: {css_color(p["primary_container"], 0.82)};
+    color: {p["on_primary_container"]};
+    border-color: {css_color(p["primary"], 0.62)};
+}}
+
+.widget-buttons-grid > flowbox > flowboxchild > button.toggle:checked:hover {{
+    background: {css_color(p["primary"], 0.82)};
+    color: {p["on_primary"]};
+}}
+'''
+    atomic_write(CONFIG / "swaync/style.css", style)
+
+
+def write_swayosd(p: dict[str, str]) -> None:
+    style = '''@import url("../waybar/colors.css");
+
+window#osd {
+    background: alpha(@surface_container, 0.66);
+    border: 1px solid alpha(@on_surface, 0.17);
+    border-top-color: alpha(@on_surface, 0.28);
+    border-radius: 24px;
+    box-shadow:
+        0 16px 46px alpha(@shadow, 0.48),
+        inset 0 1px 0 alpha(@on_surface, 0.12);
+}
+
+#container {
+    margin: 18px 23px;
+}
+
+image {
+    color: @primary;
+    -gtk-icon-size: 32px;
+}
+
+label {
+    color: @on_surface;
+    font-family: "Noto Sans", "Symbols Nerd Font Mono", sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+progressbar:disabled,
+image:disabled {
+    opacity: 0.52;
+}
+
+progressbar,
+segmentedprogress {
+    min-height: 10px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+}
+
+trough,
+segment {
+    min-height: inherit;
+    border: none;
+    border-radius: inherit;
+    background: alpha(@outline_variant, 0.54);
+}
+
+progress,
+segment.active {
+    min-height: inherit;
+    border: none;
+    border-radius: inherit;
+    background: @primary;
+    box-shadow: 0 2px 10px alpha(@primary, 0.42);
+}
+
+segment {
+    margin-left: 7px;
+}
+
+segment:first-child {
+    margin-left: 0;
+}
+'''
+    atomic_write(CONFIG / "swayosd/style.css", style)
+
+
+def write_nwg_bar(p: dict[str, str]) -> None:
+    style = '''@import url("../waybar/colors.css");
+
+window {
+    background: alpha(@surface, 0.54);
+}
+
+#outer-box {
+    margin: 0;
+    padding: 0;
+}
+
+#inner-box {
+    background: alpha(@surface_container, 0.68);
+    border: 1px solid alpha(@on_surface, 0.18);
+    border-top-color: alpha(@on_surface, 0.30);
+    border-radius: 42px;
+    padding: 28px;
+    margin: 24px;
+    box-shadow:
+        0 28px 80px alpha(@shadow, 0.58),
+        inset 0 1px 0 alpha(@on_surface, 0.12);
+}
+
+button {
+    color: @on_surface;
+    background: alpha(@surface_container_high, 0.62);
+    border: 1px solid alpha(@on_surface, 0.14);
+    border-top-color: alpha(@on_surface, 0.23);
+    border-radius: 30px;
+    min-width: 150px;
+    min-height: 150px;
+    margin: 12px;
+    padding: 22px;
+    box-shadow:
+        0 12px 34px alpha(@shadow, 0.32),
+        inset 0 1px 0 alpha(@on_surface, 0.08);
+    transition:
+        background-color 180ms ease,
+        border-color 180ms ease,
+        box-shadow 180ms ease;
+}
+
+button:hover,
+button:focus {
+    color: @on_primary_container;

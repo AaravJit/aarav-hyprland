@@ -1,0 +1,11 @@
+    args = parser.parse_args()
+
+    try:
+        apply(force=args.force, refresh=args.refresh, quiet=args.quiet)
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as error:
+        print(f"liquid-glass-apply: {error}", file=os.sys.stderr)
+        raise SystemExit(1)
+
+
+if __name__ == "__main__":
+    main()

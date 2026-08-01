@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+from pathlib import Path
+
+parts_dir = Path(__file__).with_name("liquid-glass-engine")
+parts = sorted(parts_dir.glob("part*.pyfrag"))
+
+if not parts:
+    raise SystemExit(f"Liquid Glass engine parts are missing: {parts_dir}")
+
+source = "".join(path.read_text(encoding="utf-8") for path in parts)
+namespace = {
+    "__name__": "__main__",
+    "__file__": str(Path(__file__).resolve()),
+}
+exec(compile(source, str(Path(__file__).resolve()), "exec"), namespace)

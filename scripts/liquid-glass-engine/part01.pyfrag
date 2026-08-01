@@ -1,0 +1,280 @@
+end
+'''
+    atomic_write(CONFIG / "hypr/generated/user-settings.lua", text)
+
+
+def write_final_polish() -> None:
+    text = r'''--------------------------------
+-- Aarav Liquid Glass visual system
+--------------------------------
+
+hl.config({
+    general = {
+        gaps_in = 7,
+        gaps_out = 14,
+        border_size = 1,
+        resize_on_border = true,
+    },
+
+    decoration = {
+        rounding = 18,
+        rounding_power = 2.45,
+
+        shadow = {
+            enabled = true,
+            range = 16,
+            render_power = 3,
+            color = 0x66000000,
+        },
+
+        blur = {
+            enabled = true,
+            size = 10,
+            passes = 4,
+            vibrancy = 0.18,
+        },
+    },
+})
+
+hl.curve(
+    "liquidEase",
+    {
+        type = "bezier",
+        points = {
+            { 0.22, 1.00 },
+            { 0.36, 1.00 },
+        },
+    }
+)
+
+hl.curve(
+    "liquidClose",
+    {
+        type = "bezier",
+        points = {
+            { 0.40, 0.00 },
+            { 1.00, 1.00 },
+        },
+    }
+)
+
+hl.curve(
+    "liquidSpring",
+    {
+        type = "spring",
+        mass = 1,
+        stiffness = 92,
+        dampening = 19,
+    }
+)
+
+hl.animation({
+    leaf = "global",
+    enabled = true,
+    speed = 4.2,
+    bezier = "liquidEase",
+})
+
+hl.animation({
+    leaf = "windows",
+    enabled = true,
+    speed = 4.0,
+    spring = "liquidSpring",
+})
+
+hl.animation({
+    leaf = "windowsIn",
+    enabled = true,
+    speed = 3.7,
+    spring = "liquidSpring",
+    style = "popin 96%",
+})
+
+hl.animation({
+    leaf = "windowsOut",
+    enabled = true,
+    speed = 2.0,
+    bezier = "liquidClose",
+    style = "popin 97%",
+})
+
+hl.animation({
+    leaf = "windowsMove",
+    enabled = true,
+    speed = 4.3,
+    spring = "liquidSpring",
+})
+
+hl.animation({
+    leaf = "fade",
+    enabled = true,
+    speed = 3.0,
+    bezier = "liquidEase",
+})
+
+hl.animation({
+    leaf = "layers",
+    enabled = true,
+    speed = 3.6,
+    spring = "liquidSpring",
+    style = "fade",
+})
+
+hl.animation({
+    leaf = "workspaces",
+    enabled = true,
+    speed = 3.9,
+    spring = "liquidSpring",
+    style = "slidefade 10%",
+})
+
+for _, namespace in ipairs({
+    "waybar",
+    "launcher",
+    "swaync-control-center",
+    "swaync-notification-window",
+    "swayosd",
+    "nwg-bar",
+    "quickshell",
+}) do
+    hl.layer_rule({
+        match = {
+            namespace = namespace,
+        },
+        blur = true,
+        blur_popups = true,
+        ignore_alpha = 0.08,
+    })
+end
+
+-- Keep one-window workspaces spacious enough to show the rounded material.
+hl.workspace_rule({
+    workspace = "w[tv1]s[false]",
+    gaps_in = 0,
+    gaps_out = 10,
+})
+
+hl.window_rule({
+    name = "liquid-single-window",
+    match = {
+        float = false,
+        workspace = "w[tv1]s[false]",
+    },
+    border_size = 1,
+    rounding = 18,
+})
+
+hl.bind(
+    "SUPER + CTRL + R",
+    hl.dsp.exec_cmd(
+        "$HOME/.local/bin/hypr-safe-reload"
+    ),
+    {
+        description = "Safely reload Hyprland",
+    }
+)
+'''
+    atomic_write(CONFIG / "hypr/final-polish.lua", text)
+
+
+def waybar_colors(p: dict[str, str]) -> str:
+    keys = [
+        "primary", "on_primary", "primary_container", "on_primary_container",
+        "secondary", "tertiary", "surface", "surface_variant",
+        "surface_container_lowest", "surface_container_low",
+        "surface_container", "surface_container_high",
+        "surface_container_highest", "on_surface", "on_surface_variant",
+        "outline", "outline_variant", "error", "on_error",
+        "error_container", "on_error_container", "shadow",
+    ]
+    return "\n".join(f"@define-color {key} {p[key]};" for key in keys) + "\n"
+
+
+def write_waybar(p: dict[str, str]) -> None:
+    atomic_write(CONFIG / "waybar/colors.css", waybar_colors(p))
+    style = r'''@import "colors.css";
+@import "profile.css";
+
+* {
+    border: none;
+    border-radius: 0;
+    font-family:
+        "Noto Sans",
+        "Symbols Nerd Font Mono",
+        sans-serif;
+    font-size: 14px;
+    min-height: 0;
+}
+
+window#waybar {
+    background: transparent;
+    color: @on_surface;
+}
+
+tooltip {
+    background: alpha(@surface_container_high, 0.82);
+    border: 1px solid alpha(@on_surface, 0.18);
+    border-radius: 16px;
+    box-shadow:
+        0 12px 34px alpha(@shadow, 0.46),
+        inset 0 1px 0 alpha(@on_surface, 0.12);
+}
+
+tooltip label {
+    color: @on_surface;
+    padding: 9px 11px;
+}
+
+#custom-launcher,
+#workspaces,
+#custom-center-hud,
+#privacy,
+#custom-gpu,
+#idle_inhibitor,
+#custom-notification,
+#pulseaudio,
+#network,
+#backlight,
+#battery,
+#cpu,
+#memory,
+#tray,
+#clock,
+#custom-gaming {
+    background: alpha(@surface_container, 0.56);
+    border: 1px solid alpha(@on_surface, 0.14);
+    border-top-color: alpha(@on_surface, 0.25);
+    border-radius: 18px;
+    color: @on_surface;
+    margin: 0 3px;
+    padding: 0 14px;
+    box-shadow:
+        0 8px 24px alpha(@shadow, 0.34),
+        inset 0 1px 0 alpha(@on_surface, 0.10);
+    transition:
+        background-color 170ms ease,
+        border-color 170ms ease,
+        color 170ms ease,
+        box-shadow 170ms ease;
+}
+
+#custom-launcher {
+    color: @primary;
+    font-family: "Symbols Nerd Font Mono", sans-serif;
+    font-size: 20px;
+    padding: 0 17px;
+}
+
+#custom-launcher:hover,
+#custom-center-hud:hover,
+#custom-gpu:hover,
+#pulseaudio:hover,
+#network:hover,
+#idle_inhibitor:hover,
+#custom-notification:hover,
+#clock:hover {
+    background: alpha(@surface_container_high, 0.72);
+    border-color: alpha(@primary, 0.42);
+    box-shadow:
+        0 11px 28px alpha(@shadow, 0.40),
+        inset 0 1px 0 alpha(@on_surface, 0.16);

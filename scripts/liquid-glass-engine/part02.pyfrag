@@ -1,0 +1,280 @@
+}
+
+#workspaces {
+    padding: 0 6px;
+}
+
+#workspaces button {
+    background: transparent;
+    color: @on_surface_variant;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    min-width: 27px;
+    margin: 4px 1px;
+    padding: 0 8px;
+    font-weight: 600;
+    transition:
+        background-color 160ms ease,
+        color 160ms ease,
+        border-color 160ms ease;
+}
+
+#workspaces button:hover {
+    background: alpha(@surface_container_highest, 0.50);
+    color: @on_surface;
+    border-color: alpha(@on_surface, 0.12);
+}
+
+#workspaces button.active {
+    background: alpha(@primary_container, 0.76);
+    color: @on_primary_container;
+    border-color: alpha(@primary, 0.54);
+    box-shadow:
+        inset 0 1px 0 alpha(@on_primary_container, 0.18),
+        0 3px 10px alpha(@shadow, 0.28);
+}
+
+#workspaces button.special {
+    color: @tertiary;
+}
+
+#workspaces button.urgent {
+    background: alpha(@error_container, 0.82);
+    color: @on_error_container;
+    border-color: alpha(@error, 0.65);
+}
+
+#custom-center-hud {
+    min-width: 450px;
+    padding: 0 22px;
+    font-weight: 600;
+}
+
+#custom-center-hud.media-playing {
+    background: alpha(@primary_container, 0.68);
+    border-color: alpha(@primary, 0.52);
+    color: @on_primary_container;
+}
+
+#custom-center-hud.media-paused {
+    background: alpha(@surface_container_high, 0.66);
+    border-color: alpha(@tertiary, 0.42);
+    color: @tertiary;
+}
+
+#privacy {
+    padding: 0 12px;
+}
+
+#privacy-item.screenshare,
+#pulseaudio.muted,
+#network.disconnected {
+    color: @error;
+}
+
+#privacy-item.audio-in,
+#custom-notification.notification,
+#battery.charging,
+#battery.plugged {
+    color: @tertiary;
+}
+
+#custom-gpu,
+#idle_inhibitor,
+#custom-notification,
+#network {
+    font-family:
+        "Symbols Nerd Font Mono",
+        "Noto Sans",
+        sans-serif;
+    font-weight: 600;
+}
+
+#custom-gpu.cool {
+    color: @tertiary;
+}
+
+#custom-gpu.warm,
+#battery.warning {
+    color: @primary;
+}
+
+#custom-gpu.hot,
+#custom-gpu.critical,
+#battery.critical {
+    color: @error;
+}
+
+#custom-gpu.critical,
+#battery.critical {
+    background: alpha(@error_container, 0.78);
+    border-color: alpha(@error, 0.72);
+    color: @on_error_container;
+}
+
+#idle_inhibitor.activated {
+    color: @primary;
+}
+
+#cpu,
+#memory,
+#battery,
+#backlight {
+    color: @on_surface_variant;
+}
+
+#clock {
+    font-weight: 600;
+}
+
+#tray {
+    padding: 0 12px;
+}
+
+#custom-gaming {
+    background: alpha(@primary_container, 0.74);
+    border-color: alpha(@primary, 0.62);
+    color: @on_primary_container;
+    font-weight: 800;
+}
+'''
+    atomic_write(CONFIG / "waybar/style.css", style)
+
+    path = CONFIG / "waybar/config.jsonc"
+    if path.is_file():
+        text = path.read_text()
+        substitutions = {
+            r'"height"\s*:\s*\d+': '"height": 44',
+            r'"margin-top"\s*:\s*\d+': '"margin-top": 12',
+            r'"margin-left"\s*:\s*\d+': '"margin-left": 16',
+            r'"margin-right"\s*:\s*\d+': '"margin-right": 16',
+            r'"spacing"\s*:\s*\d+': '"spacing": 8',
+        }
+        for pattern, replacement in substitutions.items():
+            text = re.sub(pattern, replacement, text, count=1)
+        atomic_write(path, text)
+
+
+def write_fuzzel(p: dict[str, str], settings: dict[str, Any]) -> None:
+    launcher = settings["launcher"]
+    content = f'''[main]
+namespace=launcher
+font=Noto Sans:size={launcher["font_size"]},Symbols Nerd Font Mono:size={launcher["font_size"]}
+use-bold=yes
+dpi-aware=auto
+terminal=kitty
+layer=overlay
+anchor=center
+
+width={launcher["width"]}
+lines={launcher["lines"]}
+horizontal-pad={launcher["horizontal_pad"]}
+vertical-pad={launcher["vertical_pad"]}
+inner-pad={launcher["inner_pad"]}
+line-height={launcher["line_height"]}px
+letter-spacing=0
+
+prompt=
+placeholder=Search applications
+match-mode=fzf
+fields=name,generic,keywords,categories,filename,exec
+filter-desktop=yes
+show-actions=yes
+match-counter=yes
+icons-enabled=yes
+image-size-ratio=0.72
+
+[colors]
+background={hex8(p["surface_container"], 0.74)}
+text={hex8(p["on_surface"], 0.96)}
+prompt={hex8(p["primary"], 1.0)}
+placeholder={hex8(p["on_surface_variant"], 0.78)}
+input={hex8(p["on_surface"], 1.0)}
+match={hex8(p["tertiary"], 1.0)}
+selection={hex8(p["primary_container"], 0.78)}
+selection-text={hex8(p["on_primary_container"], 1.0)}
+selection-match={hex8(p["primary"], 1.0)}
+counter={hex8(p["on_surface_variant"], 0.82)}
+border={hex8(p["on_surface"], 0.18)}
+
+[border]
+width=1
+radius={launcher["radius"]}
+selection-radius={launcher["selection_radius"]}
+
+[dmenu]
+exit-immediately-if-empty=yes
+'''
+    atomic_write(CONFIG / "fuzzel/fuzzel.ini", content)
+
+
+def css_color(value: str, alpha: float = 1.0) -> str:
+    return "#" + hex8(value, alpha)
+
+
+def write_swaync(p: dict[str, str]) -> None:
+    style = f'''* {{
+    font-family: "Noto Sans", "Symbols Nerd Font Mono", sans-serif;
+    font-size: 14px;
+}}
+
+.blank-window,
+.floating-notifications {{
+    background: transparent;
+}}
+
+.control-center {{
+    background: {css_color(p["surface_container"], 0.66)};
+    color: {p["on_surface"]};
+    border: 1px solid {css_color(p["on_surface"], 0.16)};
+    border-top-color: {css_color(p["on_surface"], 0.26)};
+    border-radius: 26px;
+    padding: 12px;
+    box-shadow:
+        0 20px 60px {css_color(p["shadow"], 0.52)},
+        inset 0 1px 0 {css_color(p["on_surface"], 0.10)};
+}}
+
+.control-center-list,
+.notification-row,
+.notification-background,
+.notification-content,
+.widget-buttons-grid,
+.widget-buttons-grid > flowbox,
+.widget-buttons-grid > flowbox > flowboxchild {{
+    background: transparent;
+}}
+
+.control-center-list-placeholder {{
+    color: {p["on_surface_variant"]};
+}}
+
+.notification-background {{
+    padding: 6px;
+}}
+
+.notification {{
+    background: {css_color(p["surface_container_high"], 0.72)};
+    border: 1px solid {css_color(p["on_surface"], 0.14)};
+    border-top-color: {css_color(p["on_surface"], 0.23)};
+    border-radius: 21px;
+    box-shadow:
+        0 10px 30px {css_color(p["shadow"], 0.38)},
+        inset 0 1px 0 {css_color(p["on_surface"], 0.08)};
+    transition:
+        background-color 180ms ease,
+        border-color 180ms ease;
+}}
+
+.notification:hover {{
+    background: {css_color(p["surface_container_highest"], 0.78)};
+    border-color: {css_color(p["primary"], 0.34)};
+}}
+
+.notification-content {{
+    padding: 12px;
+}}
+
+.notification-default-action,
+.notification-action {{
+    background: transparent;
