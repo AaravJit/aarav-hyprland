@@ -5,8 +5,14 @@ selection="$(
     cliphist list |
         fuzzel \
             --dmenu \
+            --no-icons \
             --with-nth=2 \
-            --prompt='Clipboard > '
+            --message='Clipboard history' \
+            --prompt='  ' \
+            --placeholder='Search copied text' \
+            --width=64 \
+            --lines=11 \
+            --minimal-lines
 )" || exit 0
 
 [[ -n "$selection" ]] || exit 0
