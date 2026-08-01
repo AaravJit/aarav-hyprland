@@ -1,0 +1,257 @@
+
+QtObject {{
+    readonly property color primary: "{p["primary"]}"
+    readonly property color primaryContainer: "{p["primary_container"]}"
+    readonly property color primaryContainerForeground: "{p["on_primary_container"]}"
+    readonly property color secondary: "{p["secondary"]}"
+    readonly property color tertiary: "{p["tertiary"]}"
+    readonly property color surface: "{p["surface"]}"
+    readonly property color surfaceContainer: "{p["surface_container"]}"
+    readonly property color surfaceContainerHigh: "{p["surface_container_high"]}"
+    readonly property color surfaceContainerHighest: "{p["surface_container_highest"]}"
+    readonly property color surfaceForeground: "{p["on_surface"]}"
+    readonly property color surfaceVariantForeground: "{p["on_surface_variant"]}"
+    readonly property color outline: "{p["outline"]}"
+    readonly property color outlineVariant: "{p["outline_variant"]}"
+    readonly property color error: "{p["error"]}"
+    readonly property color shadow: "{p["shadow"]}"
+    readonly property color glass: {qml_rgba(p["surface_container"], 0.64)}
+    readonly property color glassElevated: {qml_rgba(p["surface_container_high"], 0.72)}
+    readonly property color glassBorder: {qml_rgba(p["on_surface"], 0.18)}
+    readonly property color glassShine: {qml_rgba(p["on_surface"], 0.14)}
+}}
+'''
+    atomic_write(
+        CONFIG / "quickshell/overview/common/Appearance.colors.qml",
+        appearance,
+    )
+
+    config_path = CONFIG / "quickshell/overview/config.json"
+    try:
+        data = json.loads(config_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        data = {}
+    if isinstance(data, dict):
+        overview = data.setdefault("overview", {})
+        overview["workspaceSpacing"] = 14
+        overview["backgroundPadding"] = 24
+        effects = overview.setdefault("effects", {})
+        effects.update({
+            "enableBackdrop": True,
+            "backdropOpacity": 0.40,
+            "enableBlur": True,
+            "panelOpacity": 0.62,
+            "workspaceOpacity": 0.54,
+            "emptyWorkspaceWallpaperOverlayOpacity": 0.10,
+            "windowOverlayOpacity": 0.07,
+            "glassMode": True,
+            "glassTintStrength": 0.62,
+            "glassBorderOpacity": 0.92,
+            "glassShineOpacity": 0.34,
+        })
+        position = data.setdefault("position", {})
+        position["topMargin"] = 96
+        atomic_write(config_path, json.dumps(data, indent=4) + "\n")
+
+
+def settings_palette_qml(p: dict[str, str]) -> str:
+    return f'''import QtQuick
+
+QtObject {{
+    property color primary: "{p["primary"]}"
+    property color primaryForeground: "{p["on_primary"]}"
+    property color primaryContainer: "{p["primary_container"]}"
+    property color primaryContainerForeground: "{p["on_primary_container"]}"
+    property color secondary: "{p["secondary"]}"
+    property color secondaryForeground: "{p["on_secondary"]}"
+    property color tertiary: "{p["tertiary"]}"
+    property color tertiaryForeground: "{p["on_tertiary"]}"
+    property color background: "{p["background"]}"
+    property color backgroundForeground: "{p["on_background"]}"
+    property color surface: "{p["surface"]}"
+    property color surfaceLow: "{p["surface_container_low"]}"
+    property color surfaceContainer: "{p["surface_container"]}"
+    property color surfaceHigh: "{p["surface_container_high"]}"
+    property color surfaceHighest: "{p["surface_container_highest"]}"
+    property color surfaceForeground: "{p["on_surface"]}"
+    property color surfaceVariantForeground: "{p["on_surface_variant"]}"
+    property color outline: "{p["outline"]}"
+    property color outlineVariant: "{p["outline_variant"]}"
+    property color error: "{p["error"]}"
+    property color errorForeground: "{p["on_error"]}"
+    property color errorContainer: "{p["error_container"]}"
+    property color errorContainerForeground: "{p["on_error_container"]}"
+    property color glass: {qml_rgba(p["surface_container"], 0.66)}
+    property color glassLow: {qml_rgba(p["surface_container_low"], 0.56)}
+    property color glassHigh: {qml_rgba(p["surface_container_high"], 0.74)}
+    property color glassBorder: {qml_rgba(p["on_surface"], 0.17)}
+    property color glassShine: {qml_rgba(p["on_surface"], 0.12)}
+}}
+'''
+
+
+def patch_settings_panel(p: dict[str, str]) -> None:
+    panel = CONFIG / "quickshell/overview/settings-panel"
+    if not panel.is_dir():
+        return
+
+    atomic_write(panel / "Colors.qml", settings_palette_qml(p))
+
+    marker = "// Liquid Glass transformed\n"
+
+    for path in sorted(panel.glob("shell.part*.qml")):
+        text = path.read_text()
+        for old, new in QML_NAMES.items():
+            text = text.replace(f"colors.{old}", f"colors.{new}")
+
+        material_replacements = {
+            "color: colors.background": "color: colors.glass",
+            "color: colors.surfaceLow": "color: colors.glassLow",
+            "color: colors.surfaceContainer": "color: colors.glass",
+            "color: colors.surfaceHigh": "color: colors.glassHigh",
+            "border.color: colors.outlineVariant": "border.color: colors.glassBorder",
+        }
+        for old, new in material_replacements.items():
+            text = text.replace(old, new)
+
+        if marker.strip() not in text:
+            geometry_replacements = {
+                "radius: 22": "radius: 28",
+                "radius: 18": "radius: 21",
+                "radius: 15": "radius: 18",
+                "radius: 14": "radius: 17",
+                "radius: 13": "radius: 16",
+                "radius: 12": "radius: 15",
+                "Layout.preferredWidth: 218": "Layout.preferredWidth: 232",
+                "implicitHeight: 74": "implicitHeight: 78",
+                "implicitHeight: 68": "implicitHeight: 72",
+            }
+            for old, new in geometry_replacements.items():
+                text = text.replace(old, new)
+            text = marker + text
+
+        atomic_write(path, text)
+
+    generated = panel / ".generated-shell.qml"
+    if generated.exists():
+        generated.unlink()
+
+    core = panel / "settings_core.py"
+    if core.is_file():
+        text = core.read_text()
+        defaults = {
+            '"gaps_in": 5': '"gaps_in": 7',
+            '"gaps_out": 10': '"gaps_out": 14',
+            '"border_size": 2': '"border_size": 1',
+            '"rounding": 12': '"rounding": 18',
+            '"active_opacity": 0.97': '"active_opacity": 0.985',
+            '"inactive_opacity": 0.92': '"inactive_opacity": 0.94',
+            '"blur_size": 7': '"blur_size": 10',
+            '"blur_passes": 3': '"blur_passes": 4',
+            '"blur_vibrancy": 0.12': '"blur_vibrancy": 0.18',
+            '"shadow_range": 4': '"shadow_range": 16',
+            '"radius": 18': '"radius": 24',
+            '"selection_radius": 10': '"selection_radius": 15',
+        }
+        for old, new in defaults.items():
+            text = text.replace(old, new)
+        text = text.replace(
+            'layout.get("rounding", 12), 0, 30, integer=True',
+            'layout.get("rounding", 18), 0, 20, integer=True',
+        )
+        atomic_write(core, text)
+
+
+def digest_for(p: dict[str, str], settings: dict[str, Any]) -> str:
+    payload = {
+        "version": VERSION,
+        "palette": p,
+        "layout": settings.get("layout", {}),
+        "effects": settings.get("effects", {}),
+        "launcher": settings.get("launcher", {}),
+    }
+    raw = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def run(command: list[str]) -> None:
+    try:
+        subprocess.run(
+            command,
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=8,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+
+
+def refresh_services(*, restart_waybar: bool) -> None:
+    run(["hyprctl", "reload"])
+    run(["swaync-client", "-rs"])
+    run(["systemctl", "--user", "try-restart", "swayosd.service"])
+    run(["systemctl", "--user", "try-restart", "quickshell-overview.service"])
+    run(["pkill", "-USR1", "kitty"])
+    if restart_waybar:
+        run(["systemctl", "--user", "try-restart", "waybar.service"])
+
+
+def apply(*, force: bool, refresh: bool, quiet: bool) -> bool:
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    palette = load_palette()
+    previous = read_apply_state()
+    first_apply = int(previous.get("version", 0) or 0) < VERSION
+
+    settings = default_settings(load_settings(), first_apply)
+    save_settings(settings)
+    digest = digest_for(palette, settings)
+    changed = force or previous.get("digest") != digest
+
+    if changed:
+        write_user_settings(settings)
+        write_final_polish()
+        write_waybar(palette)
+        write_fuzzel(palette, settings)
+        write_swaync(palette)
+        write_swayosd(palette)
+        write_nwg_bar(palette)
+        write_hyprlock(palette)
+        write_kitty(palette)
+        write_overview(palette)
+        patch_settings_panel(palette)
+        atomic_write(
+            APPLY_STATE,
+            json.dumps({"version": VERSION, "digest": digest}, indent=2) + "\n",
+            0o600,
+        )
+
+    if changed or refresh:
+        refresh_services(
+            restart_waybar=refresh
+            and os.environ.get("AARAV_LIQUID_GLASS_FROM_WAYBAR") != "1"
+        )
+
+    if not quiet:
+        print("Liquid Glass applied." if changed else "Liquid Glass already current.")
+    return changed
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Apply Aarav's wallpaper-aware Liquid Glass desktop theme."
+    )
+    parser.add_argument("--force", action="store_true")
+    parser.add_argument("--refresh", action="store_true")
+    parser.add_argument("--quiet", action="store_true")
+    args = parser.parse_args()
+
+    try:
+        apply(force=args.force, refresh=args.refresh, quiet=args.quiet)
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as error:
+        print(f"liquid-glass-apply: {error}", file=os.sys.stderr)
+        raise SystemExit(1)
+
+
+if __name__ == "__main__":
+    main()
