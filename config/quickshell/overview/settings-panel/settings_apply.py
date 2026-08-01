@@ -206,10 +206,8 @@ def open_panel(settings: dict[str, Any]) -> None:
         raise RuntimeError("Quickshell command 'qs' is unavailable")
     if not PANEL_QML.is_file():
         raise RuntimeError(f"Settings panel is missing: {PANEL_QML}")
-    environment = os.environ.copy()
-    environment["QS_DISABLE_FILE_WATCHER"] = "1"
     subprocess.Popen(
-        [qs, "-p", str(PANEL_QML)], cwd=PANEL_DIR, env=environment,
+        [qs, "-p", str(PANEL_QML)], cwd=PANEL_DIR,
         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL, start_new_session=True,
     )
