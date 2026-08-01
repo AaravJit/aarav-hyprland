@@ -2,9 +2,13 @@
 -- Aarav settings control center
 --------------------------------
 
+-- Bind the physical comma key so keyboard layout and keysym case
+-- cannot prevent the settings panel from opening.
 hl.bind(
-    "SUPER + comma",
-    hl.dsp.exec_cmd("$HOME/.local/bin/aarav-settings"),
+    "SUPER + code:59",
+    hl.dsp.exec_cmd(
+        "bash -lc '$HOME/.local/bin/aarav-settings'"
+    ),
     {
         description = "Open Aarav Settings",
     }
