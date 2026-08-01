@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -u
 
 manager="$HOME/.config/quickshell/overview/settings-panel/settings.py"
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/aarav-hyprland"
+log="$state_dir/aarav-settings.log"
+
+mkdir -p "$state_dir"
 
 if [[ ! -f "$manager" ]]; then
     notify-send \
@@ -11,4 +15,12 @@ if [[ ! -f "$manager" ]]; then
     exit 1
 fi
 
-exec python "$manager" open
+: > "$log"
+
+if ! python "$manager" open >>"$log" 2>&1; then
+    notify-send \
+        -u critical \
+        "Aarav Settings failed" \
+        "Open $log for the startup error."
+    exit 1
+fi
