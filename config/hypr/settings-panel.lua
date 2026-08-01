@@ -26,7 +26,7 @@ hl.window_rule({
     size = { 1120, 760 },
     persistent_size = true,
     dim_around = true,
-    rounding = 22,
+    rounding = 20,
     opacity = "1.0 override 1.0 override 1.0 override",
 })
 
