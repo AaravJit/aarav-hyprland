@@ -13,6 +13,7 @@ from settings_core import (
     HOME,
     HYPR_OVERRIDE,
     PANEL_DIR,
+    PANEL_PARTS,
     PANEL_QML,
     atomic_write,
     current_wallpaper,
@@ -168,8 +169,18 @@ def retheme_current(settings: dict[str, Any]) -> bool:
     return True
 
 
+def assemble_panel() -> None:
+    if not PANEL_PARTS:
+        raise RuntimeError("Settings panel source parts are missing")
+    content = "".join(path.read_text() for path in PANEL_PARTS)
+    if not content.startswith("//@ pragma AppId aarav-settings"):
+        raise RuntimeError("Settings panel source is incomplete")
+    atomic_write(PANEL_QML, content, mode=0o644)
+
+
 def open_panel(settings: dict[str, Any]) -> None:
     apply_components(settings, "all")
+    assemble_panel()
     hyprctl = shutil.which("hyprctl")
     if hyprctl:
         clients = subprocess.run(
