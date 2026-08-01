@@ -27,16 +27,27 @@ selection="$(
             -iname '*.jpeg' -o \
             -iname '*.webp' \
         \) \
-        -print 2>/dev/null |
-        sort |
+        -print0 2>/dev/null |
+        sort -z |
+        while IFS= read -r -d '' path; do
+            printf '%s\t%s\n' \
+                "$path" \
+                "$(basename -- "$path")"
+        done |
         fuzzel \
             --dmenu \
             --no-icons \
-            --message='Wallpaper and color theme' \
-            --prompt='  ' \
-            --placeholder='Search wallpaper files' \
-            --width=72 \
-            --lines=10 \
+            --with-nth=2 \
+            --accept-nth=1 \
+            --only-match \
+            --prompt='' \
+            --placeholder='Search wallpapers' \
+            --width=60 \
+            --lines=9 \
+            --horizontal-pad=18 \
+            --vertical-pad=12 \
+            --inner-pad=8 \
+            --line-height=24px \
             --minimal-lines
 )" || exit 0
 
@@ -55,6 +66,14 @@ then
         -u critical \
         "Theme generation failed" \
         "The existing wallpaper and theme were kept."
+    exit 1
+fi
+
+if ! fuzzel --check-config >/dev/null 2>&1; then
+    notify-send \
+        -u critical \
+        "Launcher theme failed" \
+        "Matugen produced an invalid Fuzzel configuration."
     exit 1
 fi
 
