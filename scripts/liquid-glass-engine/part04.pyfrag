@@ -276,5 +276,5 @@ confirm_os_window_close 0
 
 
 def write_overview(p: dict[str, str]) -> None:
-    appearance = f'''pragma Singleton
-import QtQuick
+    appearance = f'''import QtQuick
+
