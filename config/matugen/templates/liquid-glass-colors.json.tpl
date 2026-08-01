@@ -24,5 +24,5 @@
   "on_error": "{{colors.on_error.default.hex}}",
   "error_container": "{{colors.error_container.default.hex}}",
   "on_error_container": "{{colors.on_error_container.default.hex}}",
-  "shadow": "{{colors.shadow.default.hex}}"
+  "shadow": "#000000"
 }
