@@ -15,7 +15,8 @@ HYPR_OVERRIDE = HOME / ".config/hypr/generated/user-settings.lua"
 FUZZEL_CONFIG = HOME / ".config/fuzzel/fuzzel.ini"
 MACHINE_FILE = HOME / ".config/aarav-hyprland/machine.json"
 PANEL_DIR = Path(__file__).resolve().parent
-PANEL_QML = PANEL_DIR / "shell.qml"
+PANEL_QML = PANEL_DIR / ".generated-shell.qml"
+PANEL_PARTS = tuple(sorted(PANEL_DIR.glob("shell.part*.qml")))
 
 _RENDERED_WALLPAPER_DIR = "__WALLPAPER_DIR__"
 DEFAULT_WALLPAPER_DIR = (
