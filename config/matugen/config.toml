@@ -6,39 +6,15 @@ source_color_index = 0
 caching = true
 contrast = 0.15
 
+# Hyprland still receives its compositor colors directly from Matugen.
 [templates.hyprland]
 input_path = "templates/hyprland.lua.tpl"
 output_path = "~/.config/hypr/matugen.lua"
-post_hook = "hyprctl reload"
 
-[templates.waybar]
-input_path = "templates/waybar-colors.css.tpl"
-output_path = "~/.config/waybar/colors.css"
-post_hook = "systemctl --user reset-failed waybar.service; systemctl --user restart waybar.service; systemctl --user try-restart swayosd.service"
-
-[templates.fuzzel]
-input_path = "templates/fuzzel.ini.tpl"
-output_path = "~/.config/fuzzel/fuzzel.ini"
-post_hook = "python __HOME__/.config/quickshell/overview/settings-panel/settings.py apply --component launcher --quiet"
-
-[templates.kitty]
-input_path = "templates/kitty.conf.tpl"
-output_path = "~/.config/kitty/matugen.conf"
-post_hook = "pkill -USR1 kitty || true"
-
-[templates.swaync]
-input_path = "templates/swaync.css.tpl"
-output_path = "~/.config/swaync/style.css"
-post_hook = "swaync-client -rs"
-
-[templates.hyprlock-colors]
-input_path = "__HOME__/.config/matugen/templates/hyprlock-colors.conf.tpl"
-output_path = "__HOME__/.config/hypr/hyprlock-colors.conf"
-
-[templates.quickshell_overview]
-input_path = "__HOME__/.config/matugen/templates/quickshell-overview.qml"
-output_path = "__HOME__/.config/quickshell/overview/common/Appearance.colors.qml"
-
-[templates.settings_panel]
-input_path = "__HOME__/.config/matugen/templates/settings-panel-colors.qml.tpl"
-output_path = "__HOME__/.config/quickshell/overview/settings-panel/Colors.qml"
+# Every other shell surface is generated from this shared wallpaper palette.
+# The post-hook keeps Waybar, notifications, OSD, launchers, the overview,
+# settings, lock screen, power menu, and terminal visually synchronized.
+[templates.liquid_glass]
+input_path = "__HOME__/.config/matugen/templates/liquid-glass-colors.json.tpl"
+output_path = "__HOME__/.config/aarav-hyprland/liquid-glass-colors.json"
+post_hook = "__HOME__/.local/bin/liquid-glass-apply --refresh --quiet"
