@@ -13,3 +13,23 @@ namespace = {
     "__file__": str(Path(__file__).resolve()),
 }
 exec(compile(source, str(Path(__file__).resolve()), "exec"), namespace)
+
+# Keep Quickshell's required AppId pragma as the first source line. The
+# renderer's idempotence marker must follow it or settings_apply.py rejects
+# the assembled panel as incomplete.
+panel = Path.home() / ".config/quickshell/overview/settings-panel"
+first_part = panel / "shell.part01.qml"
+marker = "// Liquid Glass transformed\n"
+pragma = "//@ pragma AppId aarav-settings\n"
+
+if first_part.is_file():
+    text = first_part.read_text(encoding="utf-8")
+    broken_prefix = marker + pragma
+    if text.startswith(broken_prefix):
+        first_part.write_text(
+            pragma + marker + text[len(broken_prefix):],
+            encoding="utf-8",
+        )
+        generated = panel / ".generated-shell.qml"
+        if generated.exists():
+            generated.unlink()
