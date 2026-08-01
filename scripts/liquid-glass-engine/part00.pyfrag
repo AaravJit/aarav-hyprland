@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import re
+import subprocess
+import tempfile
+from pathlib import Path
+from typing import Any
+
+VERSION = 2
+HOME = Path.home()
+CONFIG = HOME / ".config"
+STATE_DIR = Path(os.environ.get("XDG_STATE_HOME", HOME / ".local/state")) / "aarav-hyprland"
+PALETTE_FILE = CONFIG / "aarav-hyprland/liquid-glass-colors.json"
+SETTINGS_FILE = STATE_DIR / "settings.json"
+APPLY_STATE = STATE_DIR / "liquid-glass-state.json"
+
+FALLBACK: dict[str, str] = {
+    "primary": "#ffb598",
+    "on_primary": "#501900",
+    "primary_container": "#8f4828",
+    "on_primary_container": "#ffffff",
+    "secondary": "#a0cfd4",
+    "on_secondary": "#003135",
+    "tertiary": "#8fd4c3",
+    "on_tertiary": "#00382f",
+    "background": "#0c1512",
+    "on_background": "#dbe5df",
+    "surface": "#0c1512",
+    "surface_variant": "#3f4945",
+    "surface_container_lowest": "#07100d",
+    "surface_container_low": "#151e1b",
+    "surface_container": "#1b2421",
+    "surface_container_high": "#252e2b",
+    "surface_container_highest": "#303936",
+    "on_surface": "#dbe5df",
+    "on_surface_variant": "#b8cbc3",
+    "outline": "#83958e",
+    "outline_variant": "#4e5f59",
+    "error": "#ffb4ab",
+    "on_error": "#690005",
+    "error_container": "#93000a",
+    "on_error_container": "#ffdad6",
+    "shadow": "#000000",
+}
+
+QML_NAMES = {
+    "onPrimaryContainer": "primaryContainerForeground",
+    "onSurfaceVariant": "surfaceVariantForeground",
+    "onBackground": "backgroundForeground",
+    "onSecondary": "secondaryForeground",
+    "onTertiary": "tertiaryForeground",
+    "onPrimary": "primaryForeground",
+    "onSurface": "surfaceForeground",
+    "onErrorContainer": "errorContainerForeground",
+    "onError": "errorForeground",
+}
+
+
+def atomic_write(path: Path, text: str, mode: int | None = None) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        "w",
+        encoding="utf-8",
+        dir=path.parent,
+        delete=False,
+    ) as handle:
+        handle.write(text)
+        temporary = Path(handle.name)
+    if mode is None and path.exists():
+        mode = path.stat().st_mode & 0o777
+    temporary.chmod(mode or 0o644)
+    os.replace(temporary, path)
+
+
+def normalize_hex(value: Any, fallback: str) -> str:
+    text = str(value or "").strip()
+    if not text.startswith("#"):
+        text = "#" + text
+    if re.fullmatch(r"#[0-9a-fA-F]{6}", text):
+        return text.lower()
+    return fallback
+
+
+def load_palette() -> dict[str, str]:
+    palette = dict(FALLBACK)
+    try:
+        payload = json.loads(PALETTE_FILE.read_text())
+    except (OSError, json.JSONDecodeError):
+        payload = {}
+    if isinstance(payload, dict):
+        for key, fallback in FALLBACK.items():
+            palette[key] = normalize_hex(payload.get(key), fallback)
+    return palette
+
+
+def rgb(value: str) -> tuple[int, int, int]:
+    value = value.lstrip("#")
+    return tuple(int(value[index:index + 2], 16) for index in (0, 2, 4))
+
+
+def hex8(value: str, alpha: float = 1.0) -> str:
+    alpha_byte = max(0, min(255, round(alpha * 255)))
+    return value.lstrip("#") + f"{alpha_byte:02x}"
+
+
+def rgba(value: str, alpha: float = 1.0) -> str:
+    red, green, blue = rgb(value)
+    alpha = max(0.0, min(1.0, alpha))
+    return f"rgba({red}, {green}, {blue}, {alpha:.3f})"
+
+
+def qml_rgba(value: str, alpha: float) -> str:
+    red, green, blue = rgb(value)
+    return (
+        f"Qt.rgba({red / 255:.5f}, {green / 255:.5f}, "
+        f"{blue / 255:.5f}, {alpha:.3f})"
+    )
+
+
+def load_settings() -> dict[str, Any]:
+    try:
+        data = json.loads(SETTINGS_FILE.read_text())
+    except (OSError, json.JSONDecodeError):
+        data = {}
+    return data if isinstance(data, dict) else {}
+
+
+def default_settings(settings: dict[str, Any], first_apply: bool) -> dict[str, Any]:
+    wallpaper = settings.setdefault("wallpaper", {})
+    layout = settings.setdefault("layout", {})
+    effects = settings.setdefault("effects", {})
+    launcher = settings.setdefault("launcher", {})
+    input_settings = settings.setdefault("input", {})
+
+    wallpaper.setdefault("directories", [
+        str(HOME / "Pictures/Wallpapers"),
+        str(HOME / "Pictures"),
+        str(HOME / "Downloads"),
+    ])
+    wallpaper.setdefault("mode", "dark")
+    wallpaper.setdefault("scheme", "scheme-expressive")
+    wallpaper.setdefault("source_color_index", 0)
+
+    defaults = {
+        "gaps_in": 7,
+        "gaps_out": 14,
+        "border_size": 1,
+        "rounding": 18,
+        "active_opacity": 0.985,
+        "inactive_opacity": 0.94,
+    }
+    for key, value in defaults.items():
+        if first_apply:
+            layout[key] = value
+        else:
+            layout.setdefault(key, value)
+
+    effect_defaults = {
+        "blur_enabled": True,
+        "blur_size": 10,
+        "blur_passes": 4,
+        "blur_vibrancy": 0.18,
+        "animations_enabled": True,
+        "shadow_enabled": True,
+        "shadow_range": 16,
+        "shadow_power": 3,
+        "dim_inactive": True,
+        "dim_strength": 0.06,
+    }
+    for key, value in effect_defaults.items():
+        if first_apply:
+            effects[key] = value
+        else:
+            effects.setdefault(key, value)
+
+    launcher_defaults = {
+        "width": 54,
+        "lines": 8,
+        "font_size": 14,
+        "line_height": 28,
+        "horizontal_pad": 20,
+        "vertical_pad": 16,
+        "inner_pad": 10,
+        "radius": 24,
+        "selection_radius": 15,
+    }
+    for key, value in launcher_defaults.items():
+        if first_apply:
+            launcher[key] = value
+        else:
+            launcher.setdefault(key, value)
+
+    input_settings.setdefault("follow_mouse", True)
+    input_settings.setdefault("sensitivity", -0.40)
+    settings["version"] = 1
+    return settings
+
+
+def read_apply_state() -> dict[str, Any]:
+    try:
+        data = json.loads(APPLY_STATE.read_text())
+    except (OSError, json.JSONDecodeError):
+        data = {}
+    return data if isinstance(data, dict) else {}
+
+
+def save_settings(settings: dict[str, Any]) -> None:
+    atomic_write(SETTINGS_FILE, json.dumps(settings, indent=2) + "\n", 0o600)
+
+
+def write_user_settings(settings: dict[str, Any]) -> None:
+    layout = settings["layout"]
+    effects = settings["effects"]
+    input_settings = settings["input"]
+
+    def boolean(value: Any) -> str:
+        return "true" if bool(value) else "false"
+
+    def number(value: Any) -> str:
+        if isinstance(value, bool):
+            return "1" if value else "0"
+        if isinstance(value, int):
+            return str(value)
+        try:
+            return f"{float(value):.3f}".rstrip("0").rstrip(".")
+        except (TypeError, ValueError):
+            return "0"
+
+    text = f'''--------------------------------
+-- Generated Liquid Glass settings
+--------------------------------
+
+local gamingState =
+    (os.getenv("XDG_RUNTIME_DIR") or "/tmp")
+    .. "/aarav-gamemode"
+
+local gamingMode = io.open(gamingState, "r")
+
+if gamingMode then
+    gamingMode:close()
+else
+    hl.config({{
+        general = {{
+            gaps_in = {number(layout["gaps_in"])},
+            gaps_out = {number(layout["gaps_out"])},
+            border_size = {number(layout["border_size"])},
+        }},
+        decoration = {{
+            rounding = {min(20, int(round(float(layout["rounding"]))))},
+            rounding_power = 2.45,
+            active_opacity = {number(layout["active_opacity"])},
+            inactive_opacity = {number(layout["inactive_opacity"])},
+            dim_inactive = {boolean(effects["dim_inactive"])},
+            dim_strength = {number(effects["dim_strength"])},
+            shadow = {{
+                enabled = {boolean(effects["shadow_enabled"])},
+                range = {number(effects["shadow_range"])},
+                render_power = {number(effects["shadow_power"])},
+                color = 0x66000000,
+            }},
+            blur = {{
+                enabled = {boolean(effects["blur_enabled"])},
+                size = {number(effects["blur_size"])},
+                passes = {number(effects["blur_passes"])},
+                vibrancy = {number(effects["blur_vibrancy"])},
+            }},
+        }},
+        animations = {{
+            enabled = {boolean(effects["animations_enabled"])},
+        }},
+        input = {{
+            follow_mouse = {1 if input_settings["follow_mouse"] else 0},
+            sensitivity = {number(input_settings["sensitivity"])},
+        }},
+    }})
