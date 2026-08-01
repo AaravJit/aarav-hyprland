@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+manager="$HOME/.config/quickshell/overview/settings-panel/settings.py"
+
+if [[ ! -f "$manager" ]]; then
+    notify-send \
+        -u critical \
+        "Aarav Settings unavailable" \
+        "The settings panel is not installed."
+    exit 1
+fi
+
+exec python "$manager" open

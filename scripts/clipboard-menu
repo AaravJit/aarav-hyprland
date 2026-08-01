@@ -7,11 +7,14 @@ selection="$(
             --dmenu \
             --no-icons \
             --with-nth=2 \
-            --message='Clipboard history' \
-            --prompt='  ' \
-            --placeholder='Search copied text' \
-            --width=64 \
-            --lines=11 \
+            --prompt='' \
+            --placeholder='Search clipboard' \
+            --width=56 \
+            --lines=9 \
+            --horizontal-pad=18 \
+            --vertical-pad=12 \
+            --inner-pad=8 \
+            --line-height=24px \
             --minimal-lines
 )" || exit 0
 

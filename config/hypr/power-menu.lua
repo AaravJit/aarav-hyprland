@@ -17,3 +17,5 @@ hl.bind(
         description = "Power Menu",
     }
 )
+
+require("settings-panel")

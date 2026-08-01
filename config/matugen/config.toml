@@ -19,6 +19,7 @@ post_hook = "systemctl --user reset-failed waybar.service; systemctl --user rest
 [templates.fuzzel]
 input_path = "templates/fuzzel.ini.tpl"
 output_path = "~/.config/fuzzel/fuzzel.ini"
+post_hook = "python __HOME__/.config/quickshell/overview/settings-panel/settings.py apply --component launcher --quiet"
 
 [templates.kitty]
 input_path = "templates/kitty.conf.tpl"
@@ -30,12 +31,14 @@ input_path = "templates/swaync.css.tpl"
 output_path = "~/.config/swaync/style.css"
 post_hook = "swaync-client -rs"
 
-
 [templates.hyprlock-colors]
 input_path = "__HOME__/.config/matugen/templates/hyprlock-colors.conf.tpl"
 output_path = "__HOME__/.config/hypr/hyprlock-colors.conf"
 
-
 [templates.quickshell_overview]
 input_path = "__HOME__/.config/matugen/templates/quickshell-overview.qml"
 output_path = "__HOME__/.config/quickshell/overview/common/Appearance.colors.qml"
+
+[templates.settings_panel]
+input_path = "__HOME__/.config/matugen/templates/settings-panel-colors.qml.tpl"
+output_path = "__HOME__/.config/quickshell/overview/settings-panel/Colors.qml"
