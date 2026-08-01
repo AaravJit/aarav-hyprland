@@ -19,5 +19,5 @@ QtObject {
     property color outline: "#83958e"
     property color outlineVariant: "#4e5f59"
     property color error: "#ffb4ab"
-    property color onError: "#690005"
+    property color errorForeground: "#690005"
 }
