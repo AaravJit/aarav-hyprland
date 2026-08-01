@@ -2,12 +2,9 @@
 -- Aarav settings control center
 --------------------------------
 
-local settingsManager =
-    "$HOME/.config/quickshell/overview/settings-panel/settings.py"
-
 hl.bind(
     "SUPER + comma",
-    hl.dsp.exec_cmd("python " .. settingsManager .. " open"),
+    hl.dsp.exec_cmd("$HOME/.local/bin/aarav-settings"),
     {
         description = "Open Aarav Settings",
     }
