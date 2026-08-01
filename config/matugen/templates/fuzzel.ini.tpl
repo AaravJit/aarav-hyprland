@@ -1,24 +1,22 @@
 [main]
 namespace=launcher
-font=Noto Sans:size=15,Symbols Nerd Font Mono:size=15
+font=Noto Sans:size=14,Symbols Nerd Font Mono:size=14
 use-bold=yes
 dpi-aware=auto
 terminal=kitty
 layer=overlay
 anchor=center
 
-width=58
-lines=10
-horizontal-pad=28
-vertical-pad=22
-inner-pad=14
-line-height=30px
-letter-spacing=0.2
+width=50
+lines=9
+horizontal-pad=18
+vertical-pad=12
+inner-pad=8
+line-height=24px
+letter-spacing=0
 
-message=Applications
-message-mode=expand
-prompt=  
-placeholder=Search apps, actions, and commands
+prompt=
+placeholder=Search applications
 match-mode=fzf
 fields=name,generic,keywords,categories,filename,exec
 filter-desktop=yes
@@ -28,23 +26,22 @@ icons-enabled=yes
 image-size-ratio=1
 
 [colors]
-background={{colors.surface_container.default.hex_stripped}}F2
-text={{colors.on_surface.default.hex_stripped}}E8
-message={{colors.primary.default.hex_stripped}}FF
-prompt={{colors.tertiary.default.hex_stripped}}FF
-placeholder={{colors.on_surface_variant.default.hex_stripped}}B8
+background={{colors.surface_container.default.hex_stripped}}F0
+text={{colors.on_surface.default.hex_stripped}}EE
+prompt={{colors.primary.default.hex_stripped}}FF
+placeholder={{colors.on_surface_variant.default.hex_stripped}}C8
 input={{colors.on_surface.default.hex_stripped}}FF
 match={{colors.tertiary.default.hex_stripped}}FF
-selection={{colors.primary_container.default.hex_stripped}}CC
+selection={{colors.primary_container.default.hex_stripped}}E6
 selection-text={{colors.on_primary_container.default.hex_stripped}}FF
 selection-match={{colors.primary.default.hex_stripped}}FF
-counter={{colors.on_surface_variant.default.hex_stripped}}B8
-border={{colors.outline_variant.default.hex_stripped}}C0
+counter={{colors.on_surface_variant.default.hex_stripped}}D0
+border={{colors.primary.default.hex_stripped}}90
 
 [border]
 width=1
-radius=24
-selection-radius=12
+radius=18
+selection-radius=9
 
 [dmenu]
 exit-immediately-if-empty=yes
