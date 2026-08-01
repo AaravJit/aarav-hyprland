@@ -1,24 +1,34 @@
-
 QtObject {{
-    readonly property color primary: "{p["primary"]}"
-    readonly property color primaryContainer: "{p["primary_container"]}"
-    readonly property color primaryContainerForeground: "{p["on_primary_container"]}"
-    readonly property color secondary: "{p["secondary"]}"
-    readonly property color tertiary: "{p["tertiary"]}"
-    readonly property color surface: "{p["surface"]}"
-    readonly property color surfaceContainer: "{p["surface_container"]}"
-    readonly property color surfaceContainerHigh: "{p["surface_container_high"]}"
-    readonly property color surfaceContainerHighest: "{p["surface_container_highest"]}"
-    readonly property color surfaceForeground: "{p["on_surface"]}"
-    readonly property color surfaceVariantForeground: "{p["on_surface_variant"]}"
-    readonly property color outline: "{p["outline"]}"
-    readonly property color outlineVariant: "{p["outline_variant"]}"
-    readonly property color error: "{p["error"]}"
-    readonly property color shadow: "{p["shadow"]}"
-    readonly property color glass: {qml_rgba(p["surface_container"], 0.64)}
-    readonly property color glassElevated: {qml_rgba(p["surface_container_high"], 0.72)}
-    readonly property color glassBorder: {qml_rgba(p["on_surface"], 0.18)}
-    readonly property color glassShine: {qml_rgba(p["on_surface"], 0.14)}
+    id: m3
+
+    property color m3primary: "{p["primary"]}"
+    property color m3onPrimary: "{p["on_primary"]}"
+    property color m3primaryContainer: "{p["primary_container"]}"
+    property color m3onPrimaryContainer: "{p["on_primary_container"]}"
+    property color m3secondary: "{p["secondary"]}"
+    property color m3onSecondary: "{p["on_secondary"]}"
+    property color m3secondaryContainer: "{p["surface_container_high"]}"
+    property color m3onSecondaryContainer: "{p["on_surface"]}"
+    property color m3background: "{p["background"]}"
+    property color m3onBackground: "{p["on_background"]}"
+    property color m3surface: "{p["surface"]}"
+    property color m3surfaceContainerLow: "{p["surface_container_low"]}"
+    property color m3surfaceContainer: "{p["surface_container"]}"
+    property color m3surfaceContainerHigh: "{p["surface_container_high"]}"
+    property color m3surfaceContainerHighest: "{p["surface_container_highest"]}"
+    property color m3onSurface: "{p["on_surface"]}"
+    property color m3surfaceVariant: "{p["surface_variant"]}"
+    property color m3onSurfaceVariant: "{p["on_surface_variant"]}"
+    property color m3inverseSurface: "{p["on_surface"]}"
+    property color m3inverseOnSurface: "{p["surface_container_high"]}"
+    property color m3outline: "{p["outline"]}"
+    property color m3outlineVariant: "{p["outline_variant"]}"
+    property color m3shadow: "{p["shadow"]}"
+
+    property color liquidGlass: {qml_rgba(p["surface_container"], 0.64)}
+    property color liquidGlassElevated: {qml_rgba(p["surface_container_high"], 0.72)}
+    property color liquidGlassBorder: {qml_rgba(p["on_surface"], 0.18)}
+    property color liquidGlassShine: {qml_rgba(p["on_surface"], 0.14)}
 }}
 '''
     atomic_write(
@@ -268,13 +278,3 @@ def main() -> None:
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--refresh", action="store_true")
     parser.add_argument("--quiet", action="store_true")
-    args = parser.parse_args()
-
-    try:
-        apply(force=args.force, refresh=args.refresh, quiet=args.quiet)
-    except (OSError, ValueError, TypeError, json.JSONDecodeError) as error:
-        print(f"liquid-glass-apply: {error}", file=os.sys.stderr)
-        raise SystemExit(1)
-
-
-if __name__ == "__main__":
