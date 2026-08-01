@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+liquid_glass="$HOME/.local/bin/liquid-glass-apply"
+
+# Apply the fallback/current wallpaper palette before Waybar starts. The
+# environment guard prevents the theme engine from restarting this process.
+if [[ -x "$liquid_glass" ]]; then
+    AARAV_LIQUID_GLASS_FROM_WAYBAR=1 \
+        "$liquid_glass" --quiet || true
+fi
+
 state_file="${XDG_RUNTIME_DIR:-/tmp}/aarav-gamemode"
 
 if [[ -e "$state_file" ]]; then
