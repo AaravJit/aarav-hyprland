@@ -1,0 +1,576 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
+from typing import Any
+
+HOME = Path.home()
+CONFIG = HOME / ".config"
+STATE = Path(os.environ.get("XDG_STATE_HOME", HOME / ".local/state")) / "aarav-hyprland"
+PALETTE_PATH = CONFIG / "aarav-hyprland/liquid-glass-colors.json"
+STATE_PATH = STATE / "liquid-glass-apps.json"
+
+FALLBACK = {
+    "primary": "#ffb598",
+    "on_primary": "#501900",
+    "primary_container": "#8f4828",
+    "on_primary_container": "#ffffff",
+    "secondary": "#a0cfd4",
+    "on_secondary": "#003135",
+    "tertiary": "#8fd4c3",
+    "on_tertiary": "#00382f",
+    "background": "#0c1512",
+    "on_background": "#dbe5df",
+    "surface": "#0c1512",
+    "surface_variant": "#3f4945",
+    "surface_container_lowest": "#07100d",
+    "surface_container_low": "#151e1b",
+    "surface_container": "#1b2421",
+    "surface_container_high": "#252e2b",
+    "surface_container_highest": "#303936",
+    "on_surface": "#dbe5df",
+    "on_surface_variant": "#b8cbc3",
+    "outline": "#83958e",
+    "outline_variant": "#4e5f59",
+    "error": "#ffb4ab",
+    "on_error": "#690005",
+    "error_container": "#93000a",
+    "on_error_container": "#ffdad6",
+    "shadow": "#000000",
+}
+
+
+def atomic_write(path: Path, text: str, mode: int = 0o644) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as handle:
+        handle.write(text)
+        temporary = Path(handle.name)
+    temporary.chmod(mode)
+    os.replace(temporary, path)
+
+
+def load_json(path: Path) -> dict[str, Any]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def load_palette() -> dict[str, str]:
+    palette = dict(FALLBACK)
+    raw = load_json(PALETTE_PATH)
+    for key, fallback in FALLBACK.items():
+        value = str(raw.get(key, fallback)).strip().lower()
+        if len(value) == 7 and value.startswith("#"):
+            palette[key] = value
+    return palette
+
+
+def rgb(value: str) -> tuple[int, int, int]:
+    value = value.lstrip("#")
+    return tuple(int(value[index:index + 2], 16) for index in (0, 2, 4))
+
+
+def rgba(value: str, alpha: float) -> str:
+    red, green, blue = rgb(value)
+    return f"rgba({red}, {green}, {blue}, {alpha:.3f})"
+
+
+def bare(value: str) -> str:
+    return value.lstrip("#")
+
+
+def write_vesktop(p: dict[str, str]) -> None:
+    quick_css = CONFIG / "vesktop/settings/quickCss.css"
+    css = f'''/**
+ * Aarav Liquid Glass for Vesktop
+ * Generated from the current Matugen wallpaper palette.
+ */
+
+:root {{
+    --aarav-primary: {p["primary"]};
+    --aarav-primary-container: {rgba(p["primary_container"], 0.76)};
+    --aarav-surface: {rgba(p["surface"], 0.42)};
+    --aarav-glass: {rgba(p["surface_container"], 0.66)};
+    --aarav-glass-high: {rgba(p["surface_container_high"], 0.76)};
+    --aarav-border: {rgba(p["on_surface"], 0.16)};
+    --aarav-border-shine: {rgba(p["on_surface"], 0.26)};
+    --aarav-shadow: {rgba(p["shadow"], 0.44)};
+
+    --background-primary: {rgba(p["surface_container"], 0.62)} !important;
+    --background-secondary: {rgba(p["surface_container_low"], 0.66)} !important;
+    --background-secondary-alt: {rgba(p["surface_container_high"], 0.66)} !important;
+    --background-tertiary: {rgba(p["surface_container_lowest"], 0.64)} !important;
+    --background-floating: {rgba(p["surface_container_high"], 0.82)} !important;
+    --background-modifier-hover: {rgba(p["on_surface"], 0.08)} !important;
+    --background-modifier-active: {rgba(p["primary"], 0.17)} !important;
+    --background-modifier-selected: {rgba(p["primary_container"], 0.62)} !important;
+    --channeltextarea-background: {rgba(p["surface_container_high"], 0.70)} !important;
+    --modal-background: {rgba(p["surface_container"], 0.82)} !important;
+    --modal-footer-background: {rgba(p["surface_container_low"], 0.78)} !important;
+    --input-background: {rgba(p["surface_container_high"], 0.72)} !important;
+
+    --text-normal: {p["on_surface"]} !important;
+    --text-muted: {p["on_surface_variant"]} !important;
+    --header-primary: {p["on_surface"]} !important;
+    --header-secondary: {p["on_surface_variant"]} !important;
+    --interactive-normal: {p["on_surface_variant"]} !important;
+    --interactive-hover: {p["on_surface"]} !important;
+    --interactive-active: {p["primary"]} !important;
+    --channels-default: {p["on_surface_variant"]} !important;
+    --brand-experiment: {p["primary"]} !important;
+    --brand-experiment-560: {p["primary_container"]} !important;
+    --status-positive: {p["tertiary"]} !important;
+    --status-danger: {p["error"]} !important;
+    --scrollbar-thin-thumb: {rgba(p["outline"], 0.62)} !important;
+    --scrollbar-auto-thumb: {rgba(p["outline"], 0.62)} !important;
+    --scrollbar-auto-track: transparent !important;
+}}
+
+html,
+body,
+#app-mount,
+[class*="appMount_"],
+[class*="app_"],
+[class*="layers_"] {{
+    background: transparent !important;
+}}
+
+[class*="layer_"],
+[class*="sidebar_"],
+[class*="chat_"],
+[class*="membersWrap_"],
+[class*="panels_"],
+[class*="container_"],
+[class*="content_"],
+[class*="pageWrapper_"] {{
+    border-radius: 18px !important;
+}}
+
+[class*="sidebar_"],
+[class*="chat_"],
+[class*="membersWrap_"],
+[class*="panels_"],
+[class*="container_"],
+[class*="pageWrapper_"] {{
+    border: 1px solid var(--aarav-border) !important;
+    box-shadow:
+        0 12px 36px var(--aarav-shadow),
+        inset 0 1px 0 var(--aarav-border-shine) !important;
+    backdrop-filter: blur(22px) saturate(1.18) !important;
+}}
+
+[class*="sidebar_"],
+[class*="chat_"],
+[class*="membersWrap_"] {{
+    margin: 6px !important;
+    background: var(--aarav-glass) !important;
+}}
+
+[class*="panels_"] {{
+    margin: 0 8px 8px !important;
+    background: var(--aarav-glass-high) !important;
+}}
+
+[class*="channelTextArea_"],
+[class*="searchBar_"],
+[class*="input_"] {{
+    border: 1px solid var(--aarav-border) !important;
+    border-radius: 18px !important;
+    box-shadow: inset 0 1px 0 var(--aarav-border-shine) !important;
+}}
+
+[class*="message_"],
+[class*="interactive_"] {{
+    border-radius: 14px !important;
+}}
+
+[class*="message_"].selected,
+[class*="message_"].mentioned,
+[class*="interactive_"]:hover {{
+    background: {rgba(p["primary_container"], 0.28)} !important;
+}}
+
+[class*="menu_"],
+[class*="popout_"],
+[class*="modal_"] {{
+    background: {rgba(p["surface_container_high"], 0.86)} !important;
+    border: 1px solid var(--aarav-border) !important;
+    border-radius: 20px !important;
+    box-shadow:
+        0 18px 52px var(--aarav-shadow),
+        inset 0 1px 0 var(--aarav-border-shine) !important;
+    backdrop-filter: blur(26px) saturate(1.2) !important;
+}}
+'''
+    atomic_write(quick_css, css)
+
+
+def write_spotify(p: dict[str, str]) -> bool:
+    theme = CONFIG / "spicetify/Themes/AaravLiquidGlass"
+    color_ini = f'''[Dynamic]
+text               = {bare(p["on_surface"])}
+subtext            = {bare(p["on_surface_variant"])}
+main               = {bare(p["surface"])}
+main-elevated      = {bare(p["surface_container_high"])}
+highlight          = {bare(p["surface_container_highest"])}
+highlight-elevated = {bare(p["primary_container"])}
+sidebar            = {bare(p["surface_container_low"])}
+player             = {bare(p["surface_container"])}
+card               = {bare(p["surface_container_high"])}
+shadow             = {bare(p["shadow"])}
+selected-row       = {bare(p["primary_container"])}
+button             = {bare(p["primary"])}
+button-active      = {bare(p["tertiary"])}
+button-disabled    = {bare(p["outline_variant"])}
+tab-active         = {bare(p["primary_container"])}
+notification       = {bare(p["surface_container_highest"])}
+notification-error = {bare(p["error_container"])}
+misc               = {bare(p["outline"])}
+'''
+    user_css = f'''/** Aarav Liquid Glass for Spotify */
+:root {{
+    --aarav-glass: {rgba(p["surface_container"], 0.74)};
+    --aarav-glass-high: {rgba(p["surface_container_high"], 0.82)};
+    --aarav-border: {rgba(p["on_surface"], 0.16)};
+    --aarav-shine: {rgba(p["on_surface"], 0.25)};
+    --aarav-shadow: {rgba(p["shadow"], 0.42)};
+}}
+
+body,
+.Root,
+.Root__top-container,
+.Root__main-view,
+.Root__nav-bar,
+.Root__now-playing-bar {{
+    background: transparent !important;
+}}
+
+.Root__nav-bar,
+.Root__main-view,
+.Root__now-playing-bar,
+[data-testid="left-sidebar"],
+[data-testid="now-playing-bar"],
+.main-view-container {{
+    border: 1px solid var(--aarav-border) !important;
+    border-top-color: var(--aarav-shine) !important;
+    border-radius: 20px !important;
+    box-shadow:
+        0 14px 40px var(--aarav-shadow),
+        inset 0 1px 0 var(--aarav-shine) !important;
+}}
+
+.Root__nav-bar,
+[data-testid="left-sidebar"] {{
+    margin: 8px 4px 8px 8px !important;
+    background: var(--aarav-glass) !important;
+}}
+
+.Root__main-view,
+.main-view-container {{
+    margin: 8px 8px 8px 4px !important;
+    background: var(--aarav-glass) !important;
+    overflow: hidden !important;
+}}
+
+.Root__now-playing-bar,
+[data-testid="now-playing-bar"] {{
+    margin: 0 8px 8px !important;
+    background: var(--aarav-glass-high) !important;
+}}
+
+.main-card-card,
+[data-testid="card-click-handler"],
+[data-testid="tracklist-row"],
+[data-testid="playlist-tracklist"] > div,
+.BoxComponent-group-card-naked-isInteractive-hasFocus-isDeprecated {{
+    border-radius: 16px !important;
+}}
+
+.main-card-card,
+[data-testid="card-click-handler"] {{
+    border: 1px solid {rgba(p["on_surface"], 0.10)} !important;
+    background: {rgba(p["surface_container_high"], 0.62)} !important;
+    box-shadow: inset 0 1px 0 {rgba(p["on_surface"], 0.08)} !important;
+}}
+
+.main-card-card:hover,
+[data-testid="card-click-handler"]:hover,
+[data-testid="tracklist-row"]:hover {{
+    background: {rgba(p["primary_container"], 0.42)} !important;
+    border-color: {rgba(p["primary"], 0.36)} !important;
+}}
+
+button,
+.Button-sc-qlcn5g-0,
+.encore-bright-accent-set {{
+    border-radius: 999px !important;
+}}
+
+input,
+[data-testid="search-input"] {{
+    border: 1px solid var(--aarav-border) !important;
+    border-radius: 999px !important;
+    background: {rgba(p["surface_container_high"], 0.74)} !important;
+}}
+'''
+    atomic_write(theme / "color.ini", color_ini)
+    atomic_write(theme / "user.css", user_css)
+
+    spicetify = shutil.which("spicetify")
+    if spicetify is None:
+        return False
+
+    subprocess.run(
+        [
+            spicetify,
+            "config",
+            "current_theme",
+            "AaravLiquidGlass",
+            "color_scheme",
+            "Dynamic",
+            "inject_css",
+            "1",
+            "replace_colors",
+            "1",
+            "overwrite_assets",
+            "1",
+        ],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    result = subprocess.run(
+        [spicetify, "apply", "-q"],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return result.returncode == 0
+
+
+def steam_root() -> Path:
+    candidates = [
+        HOME / ".steam/steam",
+        HOME / ".local/share/Steam",
+    ]
+    for candidate in candidates:
+        if (candidate / "steamui").is_dir():
+            return candidate
+    return candidates[0]
+
+
+def write_steam(p: dict[str, str]) -> Path:
+    theme = steam_root() / "steamui/skins/AaravLiquidGlass"
+    skin = {
+        "name": "Aarav Liquid Glass",
+        "author": "Aarav Jit",
+        "description": "Wallpaper-aware Liquid Glass styling generated by aarav-hyprland.",
+        "version": "1.0.0",
+        "UseDefaultPatches": True,
+        "RootColors": "colors.css",
+    }
+    atomic_write(theme / "skin.json", json.dumps(skin, indent=2) + "\n")
+
+    colors = f''':root {{
+    --aarav-primary: {p["primary"]};
+    --aarav-primary-container: {rgba(p["primary_container"], 0.74)};
+    --aarav-on-primary-container: {p["on_primary_container"]};
+    --aarav-surface: {rgba(p["surface"], 0.72)};
+    --aarav-glass: {rgba(p["surface_container"], 0.78)};
+    --aarav-glass-high: {rgba(p["surface_container_high"], 0.84)};
+    --aarav-glass-highest: {rgba(p["surface_container_highest"], 0.88)};
+    --aarav-text: {p["on_surface"]};
+    --aarav-muted: {p["on_surface_variant"]};
+    --aarav-border: {rgba(p["on_surface"], 0.16)};
+    --aarav-shine: {rgba(p["on_surface"], 0.25)};
+    --aarav-shadow: {rgba(p["shadow"], 0.46)};
+    --aarav-error: {p["error"]};
+}}
+'''
+    atomic_write(theme / "colors.css", colors)
+
+    common = '''
+html,
+body,
+#root {
+    background: transparent !important;
+    color: var(--aarav-text) !important;
+}
+
+body,
+body * {
+    scrollbar-color: rgba(255, 255, 255, 0.26) transparent;
+}
+
+button,
+input,
+select,
+textarea,
+[class*="Button"],
+[class*="button"] {
+    border-radius: 999px !important;
+}
+
+[class*="Modal"],
+[class*="Dialog"],
+[class*="Popover"],
+[class*="Menu"],
+[class*="contextmenu"] {
+    background: var(--aarav-glass-high) !important;
+    border: 1px solid var(--aarav-border) !important;
+    border-top-color: var(--aarav-shine) !important;
+    border-radius: 20px !important;
+    box-shadow:
+        0 18px 52px var(--aarav-shadow),
+        inset 0 1px 0 var(--aarav-shine) !important;
+}
+
+[class*="Panel"],
+[class*="panel"],
+[class*="Card"],
+[class*="card"],
+[class*="Tile"],
+[class*="tile"] {
+    border-radius: 16px !important;
+}
+
+[class*="Card"]:hover,
+[class*="card"]:hover,
+[class*="Tile"]:hover,
+[class*="tile"]:hover {
+    background-color: var(--aarav-primary-container) !important;
+}
+'''
+
+    library_css = '''@import url("colors.css");
+''' + common + '''
+body,
+#root,
+[class*="libraryroot"],
+[class*="LibraryContainer"],
+[class*="steamdesktop"] {
+    background: var(--aarav-surface) !important;
+}
+
+[class*="sidebar"],
+[class*="Sidebar"],
+[class*="gamelist"],
+[class*="GameList"] {
+    background: var(--aarav-glass) !important;
+    border-right: 1px solid var(--aarav-border) !important;
+}
+
+[class*="TitleBar"],
+[class*="titlebar"],
+[class*="Toolbar"],
+[class*="toolbar"] {
+    background: var(--aarav-glass-high) !important;
+    border-bottom: 1px solid var(--aarav-border) !important;
+}
+'''
+    friends_css = '''@import url("colors.css");
+''' + common + '''
+body,
+#root {
+    background: var(--aarav-glass) !important;
+}
+'''
+    bigpicture_css = '''@import url("colors.css");
+''' + common + '''
+body,
+#root {
+    background: var(--aarav-surface) !important;
+}
+'''
+    webkit_css = '''@import url("colors.css");
+''' + common + '''
+body,
+.responsive_page_frame,
+.responsive_page_content,
+.game_page_background {
+    background-color: var(--aarav-surface) !important;
+    color: var(--aarav-text) !important;
+}
+
+.store_nav,
+.home_cluster_ctn,
+.game_area_purchase_game,
+.discovery_queue_ctn,
+.curator_giant_capsule,
+.sale_page_purchase_item {
+    background: var(--aarav-glass) !important;
+    border: 1px solid var(--aarav-border) !important;
+    border-radius: 18px !important;
+    box-shadow: inset 0 1px 0 var(--aarav-shine) !important;
+}
+'''
+
+    atomic_write(theme / "libraryroot.custom.css", library_css)
+    atomic_write(theme / "friends.custom.css", friends_css)
+    atomic_write(theme / "bigpicture.custom.css", bigpicture_css)
+    atomic_write(theme / "webkit.css", webkit_css)
+    return theme
+
+
+def notify(title: str, body: str) -> None:
+    command = shutil.which("notify-send")
+    if command:
+        subprocess.run([command, title, body], check=False)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--force", action="store_true")
+    parser.add_argument("--quiet", action="store_true")
+    args = parser.parse_args()
+
+    STATE.mkdir(parents=True, exist_ok=True)
+    palette = load_palette()
+    digest = hashlib.sha256(json.dumps(palette, sort_keys=True).encode()).hexdigest()
+    previous = load_json(STATE_PATH)
+
+    if not args.force and previous.get("digest") == digest:
+        if not args.quiet:
+            print("Application themes already match the current wallpaper.")
+        return
+
+    write_vesktop(palette)
+    spotify_ok = write_spotify(palette)
+    steam_theme = write_steam(palette)
+
+    atomic_write(
+        STATE_PATH,
+        json.dumps(
+            {
+                "digest": digest,
+                "spotify_applied": spotify_ok,
+                "steam_theme": str(steam_theme),
+            },
+            indent=2,
+        ) + "\n",
+        0o600,
+    )
+
+    if not args.quiet:
+        print("Vesktop QuickCSS updated.")
+        print(f"Steam theme written to: {steam_theme}")
+        print("Spotify theme applied." if spotify_ok else "Spotify theme written; Spicetify apply did not complete.")
+
+    if not spotify_ok:
+        notify(
+            "Spotify Liquid Glass needs attention",
+            "The theme files were written, but Spicetify could not apply them. Run spicetify apply in a terminal.",
+        )
+
+
+if __name__ == "__main__":
+    main()
