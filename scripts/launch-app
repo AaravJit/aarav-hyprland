@@ -41,15 +41,22 @@ case "$app" in
         ;;
 
     spotify)
+        # The user's ~/.local/bin/spotify wrapper remains first in PATH and
+        # carries the machine-specific CEF stability flags.
         run_native spotify spotify-launcher ||
         run_flatpak com.spotify.Client ||
         missing "Spotify"
         ;;
 
     discord)
-        run_native discord vesktop ||
+        if command -v vesktop >/dev/null 2>&1; then
+            exec vesktop --ozone-platform-hint=auto
+        fi
+
+        run_native discord ||
+        run_flatpak dev.vencord.Vesktop ||
         run_flatpak com.discordapp.Discord ||
-        missing "Discord"
+        missing "Discord or Vesktop"
         ;;
 
     steam)
