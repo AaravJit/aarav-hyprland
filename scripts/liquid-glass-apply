@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import subprocess
+import sys
 from pathlib import Path
 
 parts_dir = Path(__file__).with_name("liquid-glass-engine")
@@ -33,3 +35,15 @@ if first_part.is_file():
         generated = panel / ".generated-shell.qml"
         if generated.exists():
             generated.unlink()
+
+# The three most-used applications share the same Matugen palette as the
+# desktop. Keep this separate from the shell renderer so missing apps never
+# prevent Hyprland itself from applying successfully.
+apps = Path(__file__).with_name("liquid-glass-apps")
+if apps.is_file():
+    forwarded: list[str] = []
+    if "--force" in sys.argv:
+        forwarded.append("--force")
+    if "--quiet" in sys.argv:
+        forwarded.append("--quiet")
+    subprocess.run([str(apps), *forwarded], check=False)
