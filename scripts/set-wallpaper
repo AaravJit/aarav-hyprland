@@ -1,20 +1,40 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+settings_manager="$HOME/.config/quickshell/overview/settings-panel/settings.py"
 declare -a roots=()
+declare -A seen_roots=()
 
-for directory in \
-    "__WALLPAPER_DIR__" \
-    "$HOME/Pictures" \
-    "$HOME/Downloads"
-do
-    [[ -d "$directory" ]] && roots+=("$directory")
-done
+add_root() {
+    local directory="$1"
+    [[ -d "$directory" ]] || return 0
+    [[ -z "${seen_roots[$directory]:-}" ]] || return 0
+    seen_roots["$directory"]=1
+    roots+=("$directory")
+}
+
+if [[ -f "$settings_manager" ]]; then
+    while IFS= read -r -d '' directory; do
+        add_root "$directory"
+    done < <(
+        python "$settings_manager" wallpaper-roots --null
+    )
+fi
+
+if (( ${#roots[@]} == 0 )); then
+    for directory in \
+        "__WALLPAPER_DIR__" \
+        "$HOME/Pictures" \
+        "$HOME/Downloads"
+    do
+        add_root "$directory"
+    done
+fi
 
 if (( ${#roots[@]} == 0 )); then
     notify-send \
         "Wallpaper picker" \
-        "No wallpaper directories were found."
+        "No valid wallpaper directories are configured. Open Aarav Settings with Super + comma."
     exit 1
 fi
 
@@ -57,16 +77,35 @@ notify-send \
     "Generating desktop theme" \
     "Extracting colors from $(basename "$selection")"
 
-if ! matugen image "$selection" \
-    --mode dark \
-    --type scheme-expressive \
+declare -a theme_args=(
+    --mode dark
+    --type scheme-expressive
     --source-color-index 0
-then
+)
+
+if [[ -f "$settings_manager" ]]; then
+    mapfile -d '' -t configured_theme_args < <(
+        python "$settings_manager" theme-args --null
+    )
+
+    if (( ${#configured_theme_args[@]} > 0 )); then
+        theme_args=("${configured_theme_args[@]}")
+    fi
+fi
+
+if ! matugen image "$selection" "${theme_args[@]}"; then
     notify-send \
         -u critical \
         "Theme generation failed" \
         "The existing wallpaper and theme were kept."
     exit 1
+fi
+
+if [[ -f "$settings_manager" ]]; then
+    python "$settings_manager" \
+        apply \
+        --component launcher \
+        --quiet
 fi
 
 if ! fuzzel --check-config >/dev/null 2>&1; then
