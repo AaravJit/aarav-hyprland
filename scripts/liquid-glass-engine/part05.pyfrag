@@ -161,6 +161,30 @@ def patch_settings_panel(p: dict[str, str]) -> None:
         )
         atomic_write(core, text)
 
+    apply_module = panel / "settings_apply.py"
+    reconcile_marker = "# Liquid Glass launcher reconciliation"
+    if apply_module.is_file():
+        text = apply_module.read_text()
+        if reconcile_marker not in text:
+            target = (
+                '        if result.returncode != 0:\n'
+                '            raise RuntimeError(result.stderr.strip() or "Fuzzel rejected its config")\n'
+            )
+            replacement = target + (
+                '\n    ' + reconcile_marker + '\n'
+                '    liquid_glass = HOME / ".local/bin/liquid-glass-apply"\n'
+                '    if liquid_glass.is_file():\n'
+                '        subprocess.run(\n'
+                '            [str(liquid_glass), "--force", "--quiet"],\n'
+                '            check=False,\n'
+                '            stdout=subprocess.DEVNULL,\n'
+                '            stderr=subprocess.DEVNULL,\n'
+                '        )\n'
+            )
+            if target in text:
+                text = text.replace(target, replacement, 1)
+                atomic_write(apply_module, text)
+
 
 def digest_for(p: dict[str, str], settings: dict[str, Any]) -> str:
     payload = {
@@ -254,4 +278,3 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
