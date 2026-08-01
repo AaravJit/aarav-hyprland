@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -47,3 +48,19 @@ if apps.is_file():
     if "--quiet" in sys.argv:
         forwarded.append("--quiet")
     subprocess.run([str(apps), *forwarded], check=False)
+
+# Vesktop stores QuickCSS and its enable switch in the same user-data tree.
+# Preserve every existing Vencord setting and only force custom CSS on.
+vesktop_settings = Path.home() / ".config/vesktop/settings/settings.json"
+vesktop_settings.parent.mkdir(parents=True, exist_ok=True)
+try:
+    payload = json.loads(vesktop_settings.read_text(encoding="utf-8"))
+except (OSError, json.JSONDecodeError):
+    payload = {}
+if not isinstance(payload, dict):
+    payload = {}
+payload["useQuickCss"] = True
+vesktop_settings.write_text(
+    json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+    encoding="utf-8",
+)
